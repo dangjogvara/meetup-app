@@ -867,7 +867,7 @@ var app = (function () {
 
     	meetupitem = new MeetupItem({
     			props: {
-    				title: /*meetups*/ ctx[0].title,
+    				title: /*meetup*/ ctx[1].title,
     				subtitle: /*meetup*/ ctx[1].subtitle,
     				description: /*meetup*/ ctx[1].description,
     				imageUrl: /*meetup*/ ctx[1].imageUrl,
@@ -893,7 +893,7 @@ var app = (function () {
     		p: function update(new_ctx, dirty) {
     			ctx = new_ctx;
     			const meetupitem_changes = {};
-    			if (dirty & /*meetups*/ 1) meetupitem_changes.title = /*meetups*/ ctx[0].title;
+    			if (dirty & /*meetups*/ 1) meetupitem_changes.title = /*meetup*/ ctx[1].title;
     			if (dirty & /*meetups*/ 1) meetupitem_changes.subtitle = /*meetup*/ ctx[1].subtitle;
     			if (dirty & /*meetups*/ 1) meetupitem_changes.description = /*meetup*/ ctx[1].description;
     			if (dirty & /*meetups*/ 1) meetupitem_changes.imageUrl = /*meetup*/ ctx[1].imageUrl;
@@ -1074,8 +1074,14 @@ var app = (function () {
 
     function create_fragment(ctx) {
     	let header;
-    	let t;
+    	let t0;
     	let main;
+    	let form;
+    	let div;
+    	let label;
+    	let t2;
+    	let input;
+    	let t3;
     	let meetupgrid;
     	let current;
     	header = new Header({ $$inline: true });
@@ -1088,9 +1094,24 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			create_component(header.$$.fragment);
-    			t = space();
+    			t0 = space();
     			main = element("main");
+    			form = element("form");
+    			div = element("div");
+    			label = element("label");
+    			label.textContent = "Title";
+    			t2 = space();
+    			input = element("input");
+    			t3 = space();
     			create_component(meetupgrid.$$.fragment);
+    			attr_dev(label, "for", "title");
+    			add_location(label, file, 33, 6, 971);
+    			attr_dev(input, "type", "text");
+    			attr_dev(input, "id", "title");
+    			add_location(input, file, 34, 6, 1011);
+    			attr_dev(div, "class", "form-control");
+    			add_location(div, file, 32, 4, 937);
+    			add_location(form, file, 31, 2, 925);
     			attr_dev(main, "class", "svelte-1r5xu04");
     			add_location(main, file, 30, 0, 915);
     		},
@@ -1099,8 +1120,14 @@ var app = (function () {
     		},
     		m: function mount(target, anchor) {
     			mount_component(header, target, anchor);
-    			insert_dev(target, t, anchor);
+    			insert_dev(target, t0, anchor);
     			insert_dev(target, main, anchor);
+    			append_dev(main, form);
+    			append_dev(form, div);
+    			append_dev(div, label);
+    			append_dev(div, t2);
+    			append_dev(div, input);
+    			append_dev(main, t3);
     			mount_component(meetupgrid, main, null);
     			current = true;
     		},
@@ -1118,7 +1145,7 @@ var app = (function () {
     		},
     		d: function destroy(detaching) {
     			destroy_component(header, detaching);
-    			if (detaching) detach_dev(t);
+    			if (detaching) detach_dev(t0);
     			if (detaching) detach_dev(main);
     			destroy_component(meetupgrid);
     		}
