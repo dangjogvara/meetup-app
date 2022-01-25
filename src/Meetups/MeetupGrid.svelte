@@ -8,7 +8,7 @@
   <!-- render meetup items -->
   {#each meetups as meetup (meetup.id)}
     <MeetupItem
-      title={meetups.title}
+      title={meetup.title}
       subtitle={meetup.subtitle}
       description={meetup.description}
       imageUrl={meetup.imageUrl}
