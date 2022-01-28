@@ -2,6 +2,7 @@
   import Header from './UI/Header.svelte';
   import MeetupGrid from './Meetups/MeetupGrid.svelte';
   import TextInput from './UI/TextInput.svelte';
+  import Button from './UI/Button.svelte';
 
   // Generate ID
   import { v4 as uuidv4 } from 'uuid';
@@ -100,7 +101,8 @@
       on:input={event => (description = event.target.value)}
     />
 
-    <button type="submit">Save</button>
+    <!-- Submit button -->
+    <Button type="submit" caption="Save" />
   </form>
   <MeetupGrid {meetups} />
 </main>
