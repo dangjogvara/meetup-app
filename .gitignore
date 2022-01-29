@@ -5,6 +5,7 @@ public/build
 .idea
 .nyc_output
 .vscode
+/build
 *.map
 /src/compiler/compile/internal_exports.ts
 /compiler.d.ts
