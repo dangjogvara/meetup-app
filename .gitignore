@@ -2,6 +2,7 @@
 node_modules
 public/bundle.*
 public/build
+public/build/bundle
 .idea
 .nyc_output
 .vscode
