@@ -1,8 +1,9 @@
 .DS_Store
 node_modules
 public/build
-public/build/bundle.*
+public/build/bundle.css
 public/build/bundle.js
+public/build/bundle.js.map
 .idea
 .nyc_output
 .vscode
