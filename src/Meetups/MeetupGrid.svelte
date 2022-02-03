@@ -8,12 +8,14 @@
     <!-- render meetup items -->
     {#each meetups as meetup (meetup.id)}
         <MeetupItem
+                id={meetup.id}
                 title={meetup.title}
                 subtitle={meetup.subtitle}
                 description={meetup.description}
                 imageUrl={meetup.imageUrl}
                 address={meetup.address}
                 email={meetup.contactEmail}
+                on:togglefavorite
         />
     {/each}
 </section>
