@@ -6,7 +6,7 @@
 
 <section id="meetups">
     <!-- render meetup items -->
-    {#each meetups as meetup (meetup.id)}
+    {#each meetups as meetup}
         <MeetupItem
                 id={meetup.id}
                 title={meetup.title}
@@ -15,6 +15,7 @@
                 imageUrl={meetup.imageUrl}
                 address={meetup.address}
                 email={meetup.contactEmail}
+                isFav={meetup.isFavorite}
                 on:togglefavorite
         />
     {/each}

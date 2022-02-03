@@ -9,6 +9,7 @@
     export let description;
     export let address;
     export let email;
+    export let isFav;
 
     const dispatch = createEventDispatcher();
 </script>
@@ -27,7 +28,8 @@
     </div>
     <footer>
         <Button href="mailto:{email}" caption="Contact" />
-        <Button mode="outline" type="button" caption="Favorite" on:click="{() => dispatch('togglefavorite', id)}" />
+        <Button mode="outline" type="button" caption="{isFav ? 'Unfavorite':'Favorite'}"
+                on:click="{() => dispatch('togglefavorite', id)}" />
         <Button type="button" caption="Show Details" />
     </footer>
 </article>

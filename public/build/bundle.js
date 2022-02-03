@@ -47,6 +47,12 @@ var app = (function () {
     function detach(node) {
         node.parentNode.removeChild(node);
     }
+    function destroy_each(iterations, detaching) {
+        for (let i = 0; i < iterations.length; i += 1) {
+            if (iterations[i])
+                iterations[i].d(detaching);
+        }
+    }
     function element(name) {
         return document.createElement(name);
     }
@@ -235,96 +241,6 @@ var app = (function () {
                 }
             });
             block.o(local);
-        }
-    }
-    function outro_and_destroy_block(block, lookup) {
-        transition_out(block, 1, 1, () => {
-            lookup.delete(block.key);
-        });
-    }
-    function update_keyed_each(old_blocks, dirty, get_key, dynamic, ctx, list, lookup, node, destroy, create_each_block, next, get_context) {
-        let o = old_blocks.length;
-        let n = list.length;
-        let i = o;
-        const old_indexes = {};
-        while (i--)
-            old_indexes[old_blocks[i].key] = i;
-        const new_blocks = [];
-        const new_lookup = new Map();
-        const deltas = new Map();
-        i = n;
-        while (i--) {
-            const child_ctx = get_context(ctx, list, i);
-            const key = get_key(child_ctx);
-            let block = lookup.get(key);
-            if (!block) {
-                block = create_each_block(key, child_ctx);
-                block.c();
-            }
-            else if (dynamic) {
-                block.p(child_ctx, dirty);
-            }
-            new_lookup.set(key, new_blocks[i] = block);
-            if (key in old_indexes)
-                deltas.set(key, Math.abs(i - old_indexes[key]));
-        }
-        const will_move = new Set();
-        const did_move = new Set();
-        function insert(block) {
-            transition_in(block, 1);
-            block.m(node, next);
-            lookup.set(block.key, block);
-            next = block.first;
-            n--;
-        }
-        while (o && n) {
-            const new_block = new_blocks[n - 1];
-            const old_block = old_blocks[o - 1];
-            const new_key = new_block.key;
-            const old_key = old_block.key;
-            if (new_block === old_block) {
-                // do nothing
-                next = new_block.first;
-                o--;
-                n--;
-            }
-            else if (!new_lookup.has(old_key)) {
-                // remove old block
-                destroy(old_block, lookup);
-                o--;
-            }
-            else if (!lookup.has(new_key) || will_move.has(new_key)) {
-                insert(new_block);
-            }
-            else if (did_move.has(old_key)) {
-                o--;
-            }
-            else if (deltas.get(new_key) > deltas.get(old_key)) {
-                did_move.add(new_key);
-                insert(new_block);
-            }
-            else {
-                will_move.add(old_key);
-                o--;
-            }
-        }
-        while (o--) {
-            const old_block = old_blocks[o];
-            if (!new_lookup.has(old_block.key))
-                destroy(old_block, lookup);
-        }
-        while (n)
-            insert(new_blocks[n - 1]);
-        return new_blocks;
-    }
-    function validate_each_keys(ctx, list, get_context, get_key) {
-        const keys = new Set();
-        for (let i = 0; i < list.length; i++) {
-            const key = get_key(get_context(ctx, list, i));
-            if (keys.has(key)) {
-                throw new Error('Cannot have duplicate keys in a keyed each');
-            }
-            keys.add(key);
         }
     }
     function create_component(block) {
@@ -897,12 +813,12 @@ var app = (function () {
     			props: {
     				mode: "outline",
     				type: "button",
-    				caption: "Favorite"
+    				caption: /*isFav*/ ctx[7] ? 'Unfavorite' : 'Favorite'
     			},
     			$$inline: true
     		});
 
-    	button1.$on("click", /*click_handler*/ ctx[8]);
+    	button1.$on("click", /*click_handler*/ ctx[9]);
 
     	button2 = new Button({
     			props: { type: "button", caption: "Show Details" },
@@ -936,27 +852,27 @@ var app = (function () {
     			t10 = space();
     			create_component(button2.$$.fragment);
     			attr_dev(h1, "class", "svelte-u406il");
-    			add_location(h1, file$3, 17, 8, 379);
+    			add_location(h1, file$3, 18, 8, 402);
     			attr_dev(h2, "class", "svelte-u406il");
-    			add_location(h2, file$3, 18, 8, 405);
+    			add_location(h2, file$3, 19, 8, 428);
     			attr_dev(p0, "class", "svelte-u406il");
-    			add_location(p0, file$3, 19, 8, 434);
+    			add_location(p0, file$3, 20, 8, 457);
     			attr_dev(header, "class", "svelte-u406il");
-    			add_location(header, file$3, 16, 4, 361);
+    			add_location(header, file$3, 17, 4, 384);
     			if (!src_url_equal(img.src, img_src_value = /*imageUrl*/ ctx[3])) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", /*title*/ ctx[1]);
     			attr_dev(img, "class", "svelte-u406il");
-    			add_location(img, file$3, 22, 8, 500);
+    			add_location(img, file$3, 23, 8, 523);
     			attr_dev(div0, "class", "image svelte-u406il");
-    			add_location(div0, file$3, 21, 4, 471);
+    			add_location(div0, file$3, 22, 4, 494);
     			attr_dev(p1, "class", "svelte-u406il");
-    			add_location(p1, file$3, 25, 8, 583);
+    			add_location(p1, file$3, 26, 8, 606);
     			attr_dev(div1, "class", "content svelte-u406il");
-    			add_location(div1, file$3, 24, 4, 552);
+    			add_location(div1, file$3, 25, 4, 575);
     			attr_dev(footer, "class", "svelte-u406il");
-    			add_location(footer, file$3, 27, 4, 621);
+    			add_location(footer, file$3, 28, 4, 644);
     			attr_dev(article, "class", "svelte-u406il");
-    			add_location(article, file$3, 15, 0, 346);
+    			add_location(article, file$3, 16, 0, 369);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1005,6 +921,9 @@ var app = (function () {
     			const button0_changes = {};
     			if (dirty & /*email*/ 64) button0_changes.href = "mailto:" + /*email*/ ctx[6];
     			button0.$set(button0_changes);
+    			const button1_changes = {};
+    			if (dirty & /*isFav*/ 128) button1_changes.caption = /*isFav*/ ctx[7] ? 'Unfavorite' : 'Favorite';
+    			button1.$set(button1_changes);
     		},
     		i: function intro(local) {
     			if (current) return;
@@ -1048,8 +967,19 @@ var app = (function () {
     	let { description } = $$props;
     	let { address } = $$props;
     	let { email } = $$props;
+    	let { isFav } = $$props;
     	const dispatch = createEventDispatcher();
-    	const writable_props = ['id', 'title', 'subtitle', 'imageUrl', 'description', 'address', 'email'];
+
+    	const writable_props = [
+    		'id',
+    		'title',
+    		'subtitle',
+    		'imageUrl',
+    		'description',
+    		'address',
+    		'email',
+    		'isFav'
+    	];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<MeetupItem> was created with unknown prop '${key}'`);
@@ -1065,6 +995,7 @@ var app = (function () {
     		if ('description' in $$props) $$invalidate(4, description = $$props.description);
     		if ('address' in $$props) $$invalidate(5, address = $$props.address);
     		if ('email' in $$props) $$invalidate(6, email = $$props.email);
+    		if ('isFav' in $$props) $$invalidate(7, isFav = $$props.isFav);
     	};
 
     	$$self.$capture_state = () => ({
@@ -1077,6 +1008,7 @@ var app = (function () {
     		description,
     		address,
     		email,
+    		isFav,
     		dispatch
     	});
 
@@ -1088,6 +1020,7 @@ var app = (function () {
     		if ('description' in $$props) $$invalidate(4, description = $$props.description);
     		if ('address' in $$props) $$invalidate(5, address = $$props.address);
     		if ('email' in $$props) $$invalidate(6, email = $$props.email);
+    		if ('isFav' in $$props) $$invalidate(7, isFav = $$props.isFav);
     	};
 
     	if ($$props && "$$inject" in $$props) {
@@ -1102,6 +1035,7 @@ var app = (function () {
     		description,
     		address,
     		email,
+    		isFav,
     		dispatch,
     		click_handler
     	];
@@ -1118,7 +1052,8 @@ var app = (function () {
     			imageUrl: 3,
     			description: 4,
     			address: 5,
-    			email: 6
+    			email: 6,
+    			isFav: 7
     		});
 
     		dispatch_dev("SvelteRegisterComponent", {
@@ -1157,6 +1092,10 @@ var app = (function () {
 
     		if (/*email*/ ctx[6] === undefined && !('email' in props)) {
     			console.warn("<MeetupItem> was created without expected prop 'email'");
+    		}
+
+    		if (/*isFav*/ ctx[7] === undefined && !('isFav' in props)) {
+    			console.warn("<MeetupItem> was created without expected prop 'isFav'");
     		}
     	}
 
@@ -1215,6 +1154,14 @@ var app = (function () {
     	set email(value) {
     		throw new Error("<MeetupItem>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
+
+    	get isFav() {
+    		throw new Error("<MeetupItem>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
+
+    	set isFav(value) {
+    		throw new Error("<MeetupItem>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    	}
     }
 
     /* src\Meetups\MeetupGrid.svelte generated by Svelte v3.46.3 */
@@ -1226,9 +1173,8 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (9:4) {#each meetups as meetup (meetup.id)}
-    function create_each_block(key_1, ctx) {
-    	let first;
+    // (9:4) {#each meetups as meetup}
+    function create_each_block(ctx) {
     	let meetupitem;
     	let current;
 
@@ -1240,7 +1186,8 @@ var app = (function () {
     				description: /*meetup*/ ctx[2].description,
     				imageUrl: /*meetup*/ ctx[2].imageUrl,
     				address: /*meetup*/ ctx[2].address,
-    				email: /*meetup*/ ctx[2].contactEmail
+    				email: /*meetup*/ ctx[2].contactEmail,
+    				isFav: /*meetup*/ ctx[2].isFavorite
     			},
     			$$inline: true
     		});
@@ -1248,20 +1195,14 @@ var app = (function () {
     	meetupitem.$on("togglefavorite", /*togglefavorite_handler*/ ctx[1]);
 
     	const block = {
-    		key: key_1,
-    		first: null,
     		c: function create() {
-    			first = empty();
     			create_component(meetupitem.$$.fragment);
-    			this.first = first;
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, first, anchor);
     			mount_component(meetupitem, target, anchor);
     			current = true;
     		},
-    		p: function update(new_ctx, dirty) {
-    			ctx = new_ctx;
+    		p: function update(ctx, dirty) {
     			const meetupitem_changes = {};
     			if (dirty & /*meetups*/ 1) meetupitem_changes.id = /*meetup*/ ctx[2].id;
     			if (dirty & /*meetups*/ 1) meetupitem_changes.title = /*meetup*/ ctx[2].title;
@@ -1270,6 +1211,7 @@ var app = (function () {
     			if (dirty & /*meetups*/ 1) meetupitem_changes.imageUrl = /*meetup*/ ctx[2].imageUrl;
     			if (dirty & /*meetups*/ 1) meetupitem_changes.address = /*meetup*/ ctx[2].address;
     			if (dirty & /*meetups*/ 1) meetupitem_changes.email = /*meetup*/ ctx[2].contactEmail;
+    			if (dirty & /*meetups*/ 1) meetupitem_changes.isFav = /*meetup*/ ctx[2].isFavorite;
     			meetupitem.$set(meetupitem_changes);
     		},
     		i: function intro(local) {
@@ -1282,7 +1224,6 @@ var app = (function () {
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(first);
     			destroy_component(meetupitem, detaching);
     		}
     	};
@@ -1291,7 +1232,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(9:4) {#each meetups as meetup (meetup.id)}",
+    		source: "(9:4) {#each meetups as meetup}",
     		ctx
     	});
 
@@ -1300,19 +1241,18 @@ var app = (function () {
 
     function create_fragment$2(ctx) {
     	let section;
-    	let each_blocks = [];
-    	let each_1_lookup = new Map();
     	let current;
     	let each_value = /*meetups*/ ctx[0];
     	validate_each_argument(each_value);
-    	const get_key = ctx => /*meetup*/ ctx[2].id;
-    	validate_each_keys(ctx, each_value, get_each_context, get_key);
+    	let each_blocks = [];
 
     	for (let i = 0; i < each_value.length; i += 1) {
-    		let child_ctx = get_each_context(ctx, each_value, i);
-    		let key = get_key(child_ctx);
-    		each_1_lookup.set(key, each_blocks[i] = create_each_block(key, child_ctx));
+    		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
     	}
+
+    	const out = i => transition_out(each_blocks[i], 1, 1, () => {
+    		each_blocks[i] = null;
+    	});
 
     	const block = {
     		c: function create() {
@@ -1342,9 +1282,28 @@ var app = (function () {
     			if (dirty & /*meetups*/ 1) {
     				each_value = /*meetups*/ ctx[0];
     				validate_each_argument(each_value);
+    				let i;
+
+    				for (i = 0; i < each_value.length; i += 1) {
+    					const child_ctx = get_each_context(ctx, each_value, i);
+
+    					if (each_blocks[i]) {
+    						each_blocks[i].p(child_ctx, dirty);
+    						transition_in(each_blocks[i], 1);
+    					} else {
+    						each_blocks[i] = create_each_block(child_ctx);
+    						each_blocks[i].c();
+    						transition_in(each_blocks[i], 1);
+    						each_blocks[i].m(section, null);
+    					}
+    				}
+
     				group_outros();
-    				validate_each_keys(ctx, each_value, get_each_context, get_key);
-    				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, section, outro_and_destroy_block, create_each_block, null, get_each_context);
+
+    				for (i = each_value.length; i < each_blocks.length; i += 1) {
+    					out(i);
+    				}
+
     				check_outros();
     			}
     		},
@@ -1358,6 +1317,8 @@ var app = (function () {
     			current = true;
     		},
     		o: function outro(local) {
+    			each_blocks = each_blocks.filter(Boolean);
+
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				transition_out(each_blocks[i]);
     			}
@@ -1366,10 +1327,7 @@ var app = (function () {
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(section);
-
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				each_blocks[i].d();
-    			}
+    			destroy_each(each_blocks, detaching);
     		}
     	};
 
@@ -1885,7 +1843,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	textinput0.$on("input", /*input_handler*/ ctx[8]);
+    	textinput0.$on("input", /*input_handler*/ ctx[9]);
 
     	textinput1 = new TextInput({
     			props: {
@@ -1896,7 +1854,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	textinput1.$on("input", /*input_handler_1*/ ctx[9]);
+    	textinput1.$on("input", /*input_handler_1*/ ctx[10]);
 
     	textinput2 = new TextInput({
     			props: {
@@ -1907,7 +1865,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	textinput2.$on("input", /*input_handler_2*/ ctx[10]);
+    	textinput2.$on("input", /*input_handler_2*/ ctx[11]);
 
     	textinput3 = new TextInput({
     			props: {
@@ -1918,7 +1876,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	textinput3.$on("input", /*input_handler_3*/ ctx[11]);
+    	textinput3.$on("input", /*input_handler_3*/ ctx[12]);
 
     	textinput4 = new TextInput({
     			props: {
@@ -1930,7 +1888,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	textinput4.$on("input", /*input_handler_4*/ ctx[12]);
+    	textinput4.$on("input", /*input_handler_4*/ ctx[13]);
 
     	textinput5 = new TextInput({
     			props: {
@@ -1942,7 +1900,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	textinput5.$on("input", /*input_handler_5*/ ctx[13]);
+    	textinput5.$on("input", /*input_handler_5*/ ctx[14]);
 
     	button = new Button({
     			props: { type: "submit", caption: "Save" },
@@ -1954,7 +1912,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	meetupgrid.$on("togglefavorite", toggleFavorite);
+    	meetupgrid.$on("togglefavorite", /*toggleFavorite*/ ctx[8]);
 
     	const block = {
     		c: function create() {
@@ -1978,9 +1936,9 @@ var app = (function () {
     			t7 = space();
     			create_component(meetupgrid.$$.fragment);
     			attr_dev(form, "class", "svelte-1k5t77g");
-    			add_location(form, file, 66, 4, 1855);
+    			add_location(form, file, 71, 4, 2200);
     			attr_dev(main, "class", "svelte-1k5t77g");
-    			add_location(main, file, 65, 0, 1843);
+    			add_location(main, file, 70, 0, 2188);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -2088,10 +2046,6 @@ var app = (function () {
     	return block;
     }
 
-    function toggleFavorite(event) {
-    	event.detail;
-    }
-
     function instance($$self, $$props, $$invalidate) {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('App', slots, []);
@@ -2139,6 +2093,16 @@ var app = (function () {
     		};
 
     		$$invalidate(6, meetups = [newMeetup, ...meetups]);
+    	}
+
+    	function toggleFavorite(event) {
+    		const id = event.detail;
+    		const updatedMeetup = { ...meetups.find(m => m.id === id) };
+    		updatedMeetup.isFavorite = !updatedMeetup.isFavorite;
+    		const meetupIndex = meetups.findIndex(m => m.id === id);
+    		const updatedMeetups = [...meetups, updatedMeetup];
+    		updatedMeetups[meetupIndex] = updatedMeetup;
+    		$$invalidate(6, meetups = updatedMeetups);
     	}
 
     	const writable_props = [];
@@ -2194,6 +2158,7 @@ var app = (function () {
     		description,
     		meetups,
     		addMeetup,
+    		toggleFavorite,
     		input_handler,
     		input_handler_1,
     		input_handler_2,
