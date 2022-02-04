@@ -7,7 +7,7 @@
   let title = '';
   let subtitle = '';
   let address = '';
-  let imageURL = '';
+  let imageUrl = '';
   let email = '';
   let description = '';
 
@@ -18,7 +18,7 @@
       title,
       subtitle,
       address,
-      imageURL,
+      imageUrl,
       email,
       description,
     });
@@ -45,10 +45,10 @@
     on:input={event => (address = event.target.value)}
   />
   <TextInput
-    id="imageURL"
+    id="imageUrl"
     label="Image URL"
-    value={imageURL}
-    on:input={event => (imageURL = event.target.value)}
+    value={imageUrl}
+    on:input={event => (imageUrl = event.target.value)}
   />
   <TextInput
     id="email"
@@ -66,7 +66,7 @@
   />
 
   <!-- Submit button -->
-  <Button type="submit" caption="Save" />
+  <Button type="submit">Save</Button>
 </form>
 
 <style>

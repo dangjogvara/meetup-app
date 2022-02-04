@@ -14,7 +14,7 @@
       title: 'Coding Bootcamp',
       subtitle: 'Learn to code',
       description: 'In this meetup we will learn to code',
-      imageURL:
+      imageUrl:
         'https://akm-img-a-in.tosshub.com/indiatoday/images/story/202012/chris-ried-ieic5Tq8YMk-unsplas_1200x768.jpeg?bEhcYQAShJnLf0Mtu4JYq8YzICfhz2rB&size=770:433',
       address: '24th Nerd Road, 100 Tórshavn',
       contactEmail: 'learntocode@test.com',
@@ -25,7 +25,7 @@
       title: 'Drink beer',
       subtitle: 'Frends',
       description: 'In this meetup we will drink beer',
-      imageURL: 'https://picsum.photos/id/237/200/300',
+      imageUrl: 'https://picsum.photos/id/237/200/300',
       address: '245th Nerd Road, 900 Vágur',
       contactEmail: 'beer@test.com',
       isFavorite: false,
@@ -41,7 +41,7 @@
       title: event.detail.title,
       subtitle: event.detail.title,
       description: event.detail.description,
-      imageURL: event.detail.imageURL,
+      imageUrl: event.detail.imageUrl,
       address: event.detail.address,
       contactEmail: event.detail.email,
     };
@@ -65,7 +65,7 @@
 
 <main>
   <div class="meetup-controls">
-    <Button caption="New Meetup" on:click={() => (editMode = 'add')} />
+    <Button on:click={() => (editMode = 'add')}>New Meetup</Button>
   </div>
   {#if editMode === 'add'}
     <EditMeetup on:save={addMeetup} />
