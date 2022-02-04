@@ -2382,7 +2382,7 @@ var app = (function () {
 
     const file = "src\\App.svelte";
 
-    // (67:2) {#if editMode === 'add'}
+    // (70:2) {#if editMode === 'add'}
     function create_if_block(ctx) {
     	let editmeetup;
     	let current;
@@ -2416,7 +2416,7 @@ var app = (function () {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(67:2) {#if editMode === 'add'}",
+    		source: "(70:2) {#if editMode === 'add'}",
     		ctx
     	});
 
@@ -2427,6 +2427,7 @@ var app = (function () {
     	let header;
     	let t0;
     	let main;
+    	let div;
     	let button;
     	let t1;
     	let t2;
@@ -2454,13 +2455,16 @@ var app = (function () {
     			create_component(header.$$.fragment);
     			t0 = space();
     			main = element("main");
+    			div = element("div");
     			create_component(button.$$.fragment);
     			t1 = space();
     			if (if_block) if_block.c();
     			t2 = space();
     			create_component(meetupgrid.$$.fragment);
-    			attr_dev(main, "class", "svelte-1r5xu04");
-    			add_location(main, file, 64, 0, 1810);
+    			attr_dev(div, "class", "meetup-controls svelte-v8dol7");
+    			add_location(div, file, 66, 2, 1961);
+    			attr_dev(main, "class", "svelte-v8dol7");
+    			add_location(main, file, 65, 0, 1951);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -2469,7 +2473,8 @@ var app = (function () {
     			mount_component(header, target, anchor);
     			insert_dev(target, t0, anchor);
     			insert_dev(target, main, anchor);
-    			mount_component(button, main, null);
+    			append_dev(main, div);
+    			mount_component(button, div, null);
     			append_dev(main, t1);
     			if (if_block) if_block.m(main, null);
     			append_dev(main, t2);
@@ -2550,7 +2555,7 @@ var app = (function () {
     			title: 'Coding Bootcamp',
     			subtitle: 'Learn to code',
     			description: 'In this meetup we will learn to code',
-    			imageUrl: 'https://akm-img-a-in.tosshub.com/indiatoday/images/story/202012/chris-ried-ieic5Tq8YMk-unsplas_1200x768.jpeg?bEhcYQAShJnLf0Mtu4JYq8YzICfhz2rB&size=770:433',
+    			imageURL: 'https://akm-img-a-in.tosshub.com/indiatoday/images/story/202012/chris-ried-ieic5Tq8YMk-unsplas_1200x768.jpeg?bEhcYQAShJnLf0Mtu4JYq8YzICfhz2rB&size=770:433',
     			address: '24th Nerd Road, 100 Tórshavn',
     			contactEmail: 'learntocode@test.com',
     			isFavorite: false
@@ -2560,7 +2565,7 @@ var app = (function () {
     			title: 'Drink beer',
     			subtitle: 'Frends',
     			description: 'In this meetup we will drink beer',
-    			imageUrl: 'https://picsum.photos/id/237/200/300',
+    			imageURL: 'https://picsum.photos/id/237/200/300',
     			address: '245th Nerd Road, 900 Vágur',
     			contactEmail: 'beer@test.com',
     			isFavorite: false
@@ -2570,18 +2575,19 @@ var app = (function () {
     	let editMode;
 
     	// Add meetup
-    	function addMeetup() {
+    	function addMeetup(event) {
     		const newMeetup = {
     			id: v4(),
-    			title,
-    			subtitle,
-    			description,
-    			imageUrl: imageURL,
-    			address,
-    			contactEmail: email
+    			title: event.detail.title,
+    			subtitle: event.detail.title,
+    			description: event.detail.description,
+    			imageURL: event.detail.imageURL,
+    			address: event.detail.address,
+    			contactEmail: event.detail.email
     		};
 
     		$$invalidate(0, meetups = [newMeetup, ...meetups]);
+    		$$invalidate(1, editMode = null);
     	}
 
     	function toggleFavorite(event) {

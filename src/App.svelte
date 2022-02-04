@@ -14,7 +14,7 @@
       title: 'Coding Bootcamp',
       subtitle: 'Learn to code',
       description: 'In this meetup we will learn to code',
-      imageUrl:
+      imageURL:
         'https://akm-img-a-in.tosshub.com/indiatoday/images/story/202012/chris-ried-ieic5Tq8YMk-unsplas_1200x768.jpeg?bEhcYQAShJnLf0Mtu4JYq8YzICfhz2rB&size=770:433',
       address: '24th Nerd Road, 100 Tórshavn',
       contactEmail: 'learntocode@test.com',
@@ -25,7 +25,7 @@
       title: 'Drink beer',
       subtitle: 'Frends',
       description: 'In this meetup we will drink beer',
-      imageUrl: 'https://picsum.photos/id/237/200/300',
+      imageURL: 'https://picsum.photos/id/237/200/300',
       address: '245th Nerd Road, 900 Vágur',
       contactEmail: 'beer@test.com',
       isFavorite: false,
@@ -35,17 +35,18 @@
   let editMode;
 
   // Add meetup
-  function addMeetup() {
+  function addMeetup(event) {
     const newMeetup = {
       id: uuidv4(),
-      title,
-      subtitle,
-      description,
-      imageUrl: imageURL,
-      address,
-      contactEmail: email,
+      title: event.detail.title,
+      subtitle: event.detail.title,
+      description: event.detail.description,
+      imageURL: event.detail.imageURL,
+      address: event.detail.address,
+      contactEmail: event.detail.email,
     };
     meetups = [newMeetup, ...meetups];
+    editMode = null;
   }
 
   function toggleFavorite(event) {
@@ -63,7 +64,9 @@
 <Header />
 
 <main>
-  <Button caption="New Meetup" on:click={() => (editMode = 'add')} />
+  <div class="meetup-controls">
+    <Button caption="New Meetup" on:click={() => (editMode = 'add')} />
+  </div>
   {#if editMode === 'add'}
     <EditMeetup on:save={addMeetup} />
   {/if}
@@ -71,6 +74,10 @@
 </main>
 
 <style>
+  .meetup-controls {
+    margin: 1rem;
+  }
+
   main {
     margin-top: 5rem;
   }
