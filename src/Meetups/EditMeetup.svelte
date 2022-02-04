@@ -1,0 +1,78 @@
+<script>
+  import { createEventDispatcher } from 'svelte';
+  import TextInput from '../UI/TextInput.svelte';
+  import Button from '../UI/Button.svelte';
+
+  // Variables
+  let title = '';
+  let subtitle = '';
+  let address = '';
+  let imageURL = '';
+  let email = '';
+  let description = '';
+
+  const dispatch = createEventDispatcher();
+
+  function submitForm() {
+    dispatch('save', {
+      title,
+      subtitle,
+      address,
+      imageURL,
+      email,
+      description,
+    });
+  }
+</script>
+
+<form on:submit|preventDefault={submitForm}>
+  <TextInput
+    id="title"
+    label="Title"
+    value={title}
+    on:input={event => (title = event.target.value)}
+  />
+  <TextInput
+    id="subtitle"
+    label="Subtitle"
+    value={subtitle}
+    on:input={event => (subtitle = event.target.value)}
+  />
+  <TextInput
+    id="address"
+    label="Address"
+    value={address}
+    on:input={event => (address = event.target.value)}
+  />
+  <TextInput
+    id="imageURL"
+    label="Image URL"
+    value={imageURL}
+    on:input={event => (imageURL = event.target.value)}
+  />
+  <TextInput
+    id="email"
+    label="E-Mail"
+    value={email}
+    type="email"
+    on:input={event => (email = event.target.value)}
+  />
+  <TextInput
+    id="description"
+    label="Description"
+    value={description}
+    controlType="textarea"
+    on:input={event => (description = event.target.value)}
+  />
+
+  <!-- Submit button -->
+  <Button type="submit" caption="Save" />
+</form>
+
+<style>
+  form {
+    width: 30rem;
+    max-width: 90%;
+    margin: auto;
+  }
+</style>

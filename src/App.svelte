@@ -1,19 +1,11 @@
 <script>
   import Header from './UI/Header.svelte';
-  import MeetupGrid from './Meetups/MeetupGrid.svelte';
-  import TextInput from './UI/TextInput.svelte';
   import Button from './UI/Button.svelte';
+  import MeetupGrid from './Meetups/MeetupGrid.svelte';
+  import EditMeetup from './Meetups/EditMeetup.svelte';
 
   // Generate ID
   import { v4 as uuidv4 } from 'uuid';
-
-  // Variables
-  let title = '';
-  let subtitle = '';
-  let address = '';
-  let imageURL = '';
-  let email = '';
-  let description = '';
 
   // mock data
   let meetups = [
@@ -39,6 +31,8 @@
       isFavorite: false,
     },
   ];
+
+  let editMode;
 
   // Add meetup
   function addMeetup() {
@@ -69,60 +63,15 @@
 <Header />
 
 <main>
-  <form on:submit|preventDefault={addMeetup}>
-    <TextInput
-      id="title"
-      label="Title"
-      value={title}
-      on:input={event => (title = event.target.value)}
-    />
-    <TextInput
-      id="subtitle"
-      label="Subtitle"
-      value={subtitle}
-      on:input={event => (subtitle = event.target.value)}
-    />
-    <TextInput
-      id="address"
-      label="Address"
-      value={address}
-      on:input={event => (address = event.target.value)}
-    />
-    <TextInput
-      id="imageURL"
-      label="Image URL"
-      value={imageURL}
-      on:input={event => (imageURL = event.target.value)}
-    />
-    <TextInput
-      id="email"
-      label="E-Mail"
-      value={email}
-      type="email"
-      on:input={event => (email = event.target.value)}
-    />
-    <TextInput
-      id="description"
-      label="Description"
-      value={description}
-      controlType="textarea"
-      on:input={event => (description = event.target.value)}
-    />
-
-    <!-- Submit button -->
-    <Button type="submit" caption="Save" />
-  </form>
+  <Button caption="New Meetup" on:click={() => (editMode = 'add')} />
+  {#if editMode === 'add'}
+    <EditMeetup on:save={addMeetup} />
+  {/if}
   <MeetupGrid {meetups} on:togglefavorite={toggleFavorite} />
 </main>
 
 <style>
   main {
     margin-top: 5rem;
-  }
-
-  form {
-    width: 30rem;
-    max-width: 90%;
-    margin: auto;
   }
 </style>
