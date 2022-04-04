@@ -941,6 +941,177 @@ var app = (function () {
     	}
     }
 
+    const subscriber_queue = [];
+    /**
+     * Create a `Writable` store that allows both updating and reading by subscription.
+     * @param {*=}value initial value
+     * @param {StartStopNotifier=}start start and stop notifications for subscriptions
+     */
+    function writable(value, start = noop) {
+        let stop;
+        const subscribers = new Set();
+        function set(new_value) {
+            if (safe_not_equal(value, new_value)) {
+                value = new_value;
+                if (stop) { // store is ready
+                    const run_queue = !subscriber_queue.length;
+                    for (const subscriber of subscribers) {
+                        subscriber[1]();
+                        subscriber_queue.push(subscriber, value);
+                    }
+                    if (run_queue) {
+                        for (let i = 0; i < subscriber_queue.length; i += 2) {
+                            subscriber_queue[i][0](subscriber_queue[i + 1]);
+                        }
+                        subscriber_queue.length = 0;
+                    }
+                }
+            }
+        }
+        function update(fn) {
+            set(fn(value));
+        }
+        function subscribe(run, invalidate = noop) {
+            const subscriber = [run, invalidate];
+            subscribers.add(subscriber);
+            if (subscribers.size === 1) {
+                stop = start(set) || noop;
+            }
+            run(value);
+            return () => {
+                subscribers.delete(subscriber);
+                if (subscribers.size === 0) {
+                    stop();
+                    stop = null;
+                }
+            };
+        }
+        return { set, update, subscribe };
+    }
+
+    // Unique ID creation requires a high quality random # generator. In the browser we therefore
+    // require the crypto API and do not support built-in fallback to lower quality random number
+    // generators (like Math.random()).
+    var getRandomValues;
+    var rnds8 = new Uint8Array(16);
+    function rng() {
+      // lazy load so that environments that need to polyfill have a chance to do so
+      if (!getRandomValues) {
+        // getRandomValues needs to be invoked in a context where "this" is a Crypto implementation. Also,
+        // find the complete implementation of crypto (msCrypto) on IE11.
+        getRandomValues = typeof crypto !== 'undefined' && crypto.getRandomValues && crypto.getRandomValues.bind(crypto) || typeof msCrypto !== 'undefined' && typeof msCrypto.getRandomValues === 'function' && msCrypto.getRandomValues.bind(msCrypto);
+
+        if (!getRandomValues) {
+          throw new Error('crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported');
+        }
+      }
+
+      return getRandomValues(rnds8);
+    }
+
+    var REGEX = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i;
+
+    function validate(uuid) {
+      return typeof uuid === 'string' && REGEX.test(uuid);
+    }
+
+    /**
+     * Convert array of 16 byte values to UUID string format of the form:
+     * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+     */
+
+    var byteToHex = [];
+
+    for (var i = 0; i < 256; ++i) {
+      byteToHex.push((i + 0x100).toString(16).substr(1));
+    }
+
+    function stringify(arr) {
+      var offset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+      // Note: Be careful editing this code!  It's been tuned for performance
+      // and works in ways you may not expect. See https://github.com/uuidjs/uuid/pull/434
+      var uuid = (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + '-' + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + '-' + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + '-' + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + '-' + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase(); // Consistency check for valid UUID.  If this throws, it's likely due to one
+      // of the following:
+      // - One or more input array values don't map to a hex octet (leading to
+      // "undefined" in the uuid)
+      // - Invalid input values for the RFC `version` or `variant` fields
+
+      if (!validate(uuid)) {
+        throw TypeError('Stringified UUID is invalid');
+      }
+
+      return uuid;
+    }
+
+    function v4(options, buf, offset) {
+      options = options || {};
+      var rnds = options.random || (options.rng || rng)(); // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
+
+      rnds[6] = rnds[6] & 0x0f | 0x40;
+      rnds[8] = rnds[8] & 0x3f | 0x80; // Copy bytes to buffer, if provided
+
+      if (buf) {
+        offset = offset || 0;
+
+        for (var i = 0; i < 16; ++i) {
+          buf[offset + i] = rnds[i];
+        }
+
+        return buf;
+      }
+
+      return stringify(rnds);
+    }
+
+    const meetups = writable([
+      {
+        id: v4(),
+        title: 'Coding Bootcamp',
+        subtitle: 'Learn to code',
+        description: 'In this meetup we will learn to code',
+        imageUrl:
+          'https://akm-img-a-in.tosshub.com/indiatoday/images/story/202012/chris-ried-ieic5Tq8YMk-unsplas_1200x768.jpeg?bEhcYQAShJnLf0Mtu4JYq8YzICfhz2rB&size=770:433',
+        address: '24th Nerd Road, 100 Tórshavn',
+        contactEmail: 'learntocode@test.com',
+        isFavorite: false,
+      },
+      {
+        id: v4(),
+        title: 'Drink beer',
+        subtitle: 'Friends',
+        description: 'In this meetup we will drink beer',
+        imageUrl: 'https://picsum.photos/id/237/200/300',
+        address: '245th Nerd Road, 900 Vágur',
+        contactEmail: 'beer@test.com',
+        isFavorite: false,
+      },
+    ]);
+
+    const customMeetupsStore = {
+      subscribe: meetups.subscribe,
+      addMeetup: meetupData => {
+        const newMeetup = {
+          ...meetupData,
+          id: v4(),
+          isFavorite: false,
+        };
+
+        meetups.update(items => {
+          return [newMeetup, ...items];
+        });
+      },
+      toggleFavorite: id => {
+        meetups.update(items => {
+          const updatedMeetup = { ...items.find(m => m.id === id) };
+          updatedMeetup.isFavorite = !updatedMeetup.isFavorite;
+          const meetupIndex = items.findIndex(m => m.id === id);
+          const updatedMeetups = [...items];
+          updatedMeetups[meetupIndex] = updatedMeetup;
+          return updatedMeetups;
+        });
+      },
+    };
+
     /* src/UI/Badge.svelte generated by Svelte v3.46.3 */
 
     const file$6 = "src/UI/Badge.svelte";
@@ -1045,7 +1216,7 @@ var app = (function () {
     /* src/Meetups/MeetupItem.svelte generated by Svelte v3.46.3 */
     const file$5 = "src/Meetups/MeetupItem.svelte";
 
-    // (22:6) {#if isFav}
+    // (25:6) {#if isFav}
     function create_if_block$2(ctx) {
     	let badge;
     	let current;
@@ -1084,14 +1255,14 @@ var app = (function () {
     		block,
     		id: create_if_block$2.name,
     		type: "if",
-    		source: "(22:6) {#if isFav}",
+    		source: "(25:6) {#if isFav}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (23:8) <Badge>
+    // (26:8) <Badge>
     function create_default_slot_3(ctx) {
     	let t;
 
@@ -1111,14 +1282,14 @@ var app = (function () {
     		block,
     		id: create_default_slot_3.name,
     		type: "slot",
-    		source: "(23:8) <Badge>",
+    		source: "(26:8) <Badge>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (36:4) <Button href="mailto:{email}">
+    // (39:4) <Button href="mailto:{email}">
     function create_default_slot_2$1(ctx) {
     	let t;
 
@@ -1138,16 +1309,16 @@ var app = (function () {
     		block,
     		id: create_default_slot_2$1.name,
     		type: "slot",
-    		source: "(36:4) <Button href=\\\"mailto:{email}\\\">",
+    		source: "(39:4) <Button href=\\\"mailto:{email}\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (37:4) <Button       mode="outline"       color={isFav ? null : 'success'}       type="button"       on:click={() => dispatch('togglefavorite', id)}>
+    // (40:4) <Button mode="outline" color={isFav ? null : 'success'} type="button" on:click={togglefavorite}       >
     function create_default_slot_1$1(ctx) {
-    	let t_value = (/*isFav*/ ctx[7] ? 'Unfavorite' : 'Favorite') + "";
+    	let t_value = (/*isFav*/ ctx[6] ? 'Unfavorite' : 'Favorite') + "";
     	let t;
 
     	const block = {
@@ -1158,7 +1329,7 @@ var app = (function () {
     			insert_dev(target, t, anchor);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*isFav*/ 128 && t_value !== (t_value = (/*isFav*/ ctx[7] ? 'Unfavorite' : 'Favorite') + "")) set_data_dev(t, t_value);
+    			if (dirty & /*isFav*/ 64 && t_value !== (t_value = (/*isFav*/ ctx[6] ? 'Unfavorite' : 'Favorite') + "")) set_data_dev(t, t_value);
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(t);
@@ -1169,7 +1340,7 @@ var app = (function () {
     		block,
     		id: create_default_slot_1$1.name,
     		type: "slot",
-    		source: "(37:4) <Button       mode=\\\"outline\\\"       color={isFav ? null : 'success'}       type=\\\"button\\\"       on:click={() => dispatch('togglefavorite', id)}>",
+    		source: "(40:4) <Button mode=\\\"outline\\\" color={isFav ? null : 'success'} type=\\\"button\\\" on:click={togglefavorite}       >",
     		ctx
     	});
 
@@ -1231,11 +1402,11 @@ var app = (function () {
     	let t11;
     	let button2;
     	let current;
-    	let if_block = /*isFav*/ ctx[7] && create_if_block$2(ctx);
+    	let if_block = /*isFav*/ ctx[6] && create_if_block$2(ctx);
 
     	button0 = new Button({
     			props: {
-    				href: "mailto:" + /*email*/ ctx[6],
+    				href: "mailto:" + /*email*/ ctx[5],
     				$$slots: { default: [create_default_slot_2$1] },
     				$$scope: { ctx }
     			},
@@ -1245,7 +1416,7 @@ var app = (function () {
     	button1 = new Button({
     			props: {
     				mode: "outline",
-    				color: /*isFav*/ ctx[7] ? null : 'success',
+    				color: /*isFav*/ ctx[6] ? null : 'success',
     				type: "button",
     				$$slots: { default: [create_default_slot_1$1] },
     				$$scope: { ctx }
@@ -1253,7 +1424,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	button1.$on("click", /*click_handler*/ ctx[9]);
+    	button1.$on("click", /*togglefavorite*/ ctx[7]);
 
     	button2 = new Button({
     			props: {
@@ -1269,22 +1440,22 @@ var app = (function () {
     			article = element("article");
     			header = element("header");
     			h1 = element("h1");
-    			t0 = text(/*title*/ ctx[1]);
+    			t0 = text(/*title*/ ctx[0]);
     			t1 = space();
     			if (if_block) if_block.c();
     			t2 = space();
     			h2 = element("h2");
-    			t3 = text(/*subtitle*/ ctx[2]);
+    			t3 = text(/*subtitle*/ ctx[1]);
     			t4 = space();
     			p0 = element("p");
-    			t5 = text(/*address*/ ctx[5]);
+    			t5 = text(/*address*/ ctx[4]);
     			t6 = space();
     			div0 = element("div");
     			img = element("img");
     			t7 = space();
     			div1 = element("div");
     			p1 = element("p");
-    			t8 = text(/*description*/ ctx[4]);
+    			t8 = text(/*description*/ ctx[3]);
     			t9 = space();
     			footer = element("footer");
     			create_component(button0.$$.fragment);
@@ -1293,27 +1464,27 @@ var app = (function () {
     			t11 = space();
     			create_component(button2.$$.fragment);
     			attr_dev(h1, "class", "svelte-lym3nh");
-    			add_location(h1, file$5, 19, 4, 398);
+    			add_location(h1, file$5, 22, 4, 412);
     			attr_dev(h2, "class", "svelte-lym3nh");
-    			add_location(h2, file$5, 25, 4, 493);
+    			add_location(h2, file$5, 28, 4, 507);
     			attr_dev(p0, "class", "svelte-lym3nh");
-    			add_location(p0, file$5, 26, 4, 517);
+    			add_location(p0, file$5, 29, 4, 531);
     			attr_dev(header, "class", "svelte-lym3nh");
-    			add_location(header, file$5, 18, 2, 385);
-    			if (!src_url_equal(img.src, img_src_value = /*imageUrl*/ ctx[3])) attr_dev(img, "src", img_src_value);
-    			attr_dev(img, "alt", /*title*/ ctx[1]);
+    			add_location(header, file$5, 21, 2, 399);
+    			if (!src_url_equal(img.src, img_src_value = /*imageUrl*/ ctx[2])) attr_dev(img, "src", img_src_value);
+    			attr_dev(img, "alt", /*title*/ ctx[0]);
     			attr_dev(img, "class", "svelte-lym3nh");
-    			add_location(img, file$5, 29, 4, 572);
+    			add_location(img, file$5, 32, 4, 586);
     			attr_dev(div0, "class", "image svelte-lym3nh");
-    			add_location(div0, file$5, 28, 2, 548);
+    			add_location(div0, file$5, 31, 2, 562);
     			attr_dev(p1, "class", "svelte-lym3nh");
-    			add_location(p1, file$5, 32, 4, 644);
+    			add_location(p1, file$5, 35, 4, 658);
     			attr_dev(div1, "class", "content svelte-lym3nh");
-    			add_location(div1, file$5, 31, 2, 618);
+    			add_location(div1, file$5, 34, 2, 632);
     			attr_dev(footer, "class", "svelte-lym3nh");
-    			add_location(footer, file$5, 34, 2, 676);
+    			add_location(footer, file$5, 37, 2, 690);
     			attr_dev(article, "class", "svelte-lym3nh");
-    			add_location(article, file$5, 17, 0, 373);
+    			add_location(article, file$5, 20, 0, 387);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1348,11 +1519,11 @@ var app = (function () {
     			current = true;
     		},
     		p: function update(ctx, [dirty]) {
-    			if (!current || dirty & /*title*/ 2) set_data_dev(t0, /*title*/ ctx[1]);
+    			if (!current || dirty & /*title*/ 1) set_data_dev(t0, /*title*/ ctx[0]);
 
-    			if (/*isFav*/ ctx[7]) {
+    			if (/*isFav*/ ctx[6]) {
     				if (if_block) {
-    					if (dirty & /*isFav*/ 128) {
+    					if (dirty & /*isFav*/ 64) {
     						transition_in(if_block, 1);
     					}
     				} else {
@@ -1371,37 +1542,37 @@ var app = (function () {
     				check_outros();
     			}
 
-    			if (!current || dirty & /*subtitle*/ 4) set_data_dev(t3, /*subtitle*/ ctx[2]);
-    			if (!current || dirty & /*address*/ 32) set_data_dev(t5, /*address*/ ctx[5]);
+    			if (!current || dirty & /*subtitle*/ 2) set_data_dev(t3, /*subtitle*/ ctx[1]);
+    			if (!current || dirty & /*address*/ 16) set_data_dev(t5, /*address*/ ctx[4]);
 
-    			if (!current || dirty & /*imageUrl*/ 8 && !src_url_equal(img.src, img_src_value = /*imageUrl*/ ctx[3])) {
+    			if (!current || dirty & /*imageUrl*/ 4 && !src_url_equal(img.src, img_src_value = /*imageUrl*/ ctx[2])) {
     				attr_dev(img, "src", img_src_value);
     			}
 
-    			if (!current || dirty & /*title*/ 2) {
-    				attr_dev(img, "alt", /*title*/ ctx[1]);
+    			if (!current || dirty & /*title*/ 1) {
+    				attr_dev(img, "alt", /*title*/ ctx[0]);
     			}
 
-    			if (!current || dirty & /*description*/ 16) set_data_dev(t8, /*description*/ ctx[4]);
+    			if (!current || dirty & /*description*/ 8) set_data_dev(t8, /*description*/ ctx[3]);
     			const button0_changes = {};
-    			if (dirty & /*email*/ 64) button0_changes.href = "mailto:" + /*email*/ ctx[6];
+    			if (dirty & /*email*/ 32) button0_changes.href = "mailto:" + /*email*/ ctx[5];
 
-    			if (dirty & /*$$scope*/ 1024) {
+    			if (dirty & /*$$scope*/ 512) {
     				button0_changes.$$scope = { dirty, ctx };
     			}
 
     			button0.$set(button0_changes);
     			const button1_changes = {};
-    			if (dirty & /*isFav*/ 128) button1_changes.color = /*isFav*/ ctx[7] ? null : 'success';
+    			if (dirty & /*isFav*/ 64) button1_changes.color = /*isFav*/ ctx[6] ? null : 'success';
 
-    			if (dirty & /*$$scope, isFav*/ 1152) {
+    			if (dirty & /*$$scope, isFav*/ 576) {
     				button1_changes.$$scope = { dirty, ctx };
     			}
 
     			button1.$set(button1_changes);
     			const button2_changes = {};
 
-    			if (dirty & /*$$scope*/ 1024) {
+    			if (dirty & /*$$scope*/ 512) {
     				button2_changes.$$scope = { dirty, ctx };
     			}
 
@@ -1453,7 +1624,10 @@ var app = (function () {
     	let { address } = $$props;
     	let { email } = $$props;
     	let { isFav } = $$props;
-    	const dispatch = createEventDispatcher();
+
+    	function togglefavorite() {
+    		customMeetupsStore.toggleFavorite(id);
+    	}
 
     	const writable_props = [
     		'id',
@@ -1470,21 +1644,19 @@ var app = (function () {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<MeetupItem> was created with unknown prop '${key}'`);
     	});
 
-    	const click_handler = () => dispatch('togglefavorite', id);
-
     	$$self.$$set = $$props => {
-    		if ('id' in $$props) $$invalidate(0, id = $$props.id);
-    		if ('title' in $$props) $$invalidate(1, title = $$props.title);
-    		if ('subtitle' in $$props) $$invalidate(2, subtitle = $$props.subtitle);
-    		if ('imageUrl' in $$props) $$invalidate(3, imageUrl = $$props.imageUrl);
-    		if ('description' in $$props) $$invalidate(4, description = $$props.description);
-    		if ('address' in $$props) $$invalidate(5, address = $$props.address);
-    		if ('email' in $$props) $$invalidate(6, email = $$props.email);
-    		if ('isFav' in $$props) $$invalidate(7, isFav = $$props.isFav);
+    		if ('id' in $$props) $$invalidate(8, id = $$props.id);
+    		if ('title' in $$props) $$invalidate(0, title = $$props.title);
+    		if ('subtitle' in $$props) $$invalidate(1, subtitle = $$props.subtitle);
+    		if ('imageUrl' in $$props) $$invalidate(2, imageUrl = $$props.imageUrl);
+    		if ('description' in $$props) $$invalidate(3, description = $$props.description);
+    		if ('address' in $$props) $$invalidate(4, address = $$props.address);
+    		if ('email' in $$props) $$invalidate(5, email = $$props.email);
+    		if ('isFav' in $$props) $$invalidate(6, isFav = $$props.isFav);
     	};
 
     	$$self.$capture_state = () => ({
-    		createEventDispatcher,
+    		meetups: customMeetupsStore,
     		Button,
     		Badge,
     		id,
@@ -1495,18 +1667,18 @@ var app = (function () {
     		address,
     		email,
     		isFav,
-    		dispatch
+    		togglefavorite
     	});
 
     	$$self.$inject_state = $$props => {
-    		if ('id' in $$props) $$invalidate(0, id = $$props.id);
-    		if ('title' in $$props) $$invalidate(1, title = $$props.title);
-    		if ('subtitle' in $$props) $$invalidate(2, subtitle = $$props.subtitle);
-    		if ('imageUrl' in $$props) $$invalidate(3, imageUrl = $$props.imageUrl);
-    		if ('description' in $$props) $$invalidate(4, description = $$props.description);
-    		if ('address' in $$props) $$invalidate(5, address = $$props.address);
-    		if ('email' in $$props) $$invalidate(6, email = $$props.email);
-    		if ('isFav' in $$props) $$invalidate(7, isFav = $$props.isFav);
+    		if ('id' in $$props) $$invalidate(8, id = $$props.id);
+    		if ('title' in $$props) $$invalidate(0, title = $$props.title);
+    		if ('subtitle' in $$props) $$invalidate(1, subtitle = $$props.subtitle);
+    		if ('imageUrl' in $$props) $$invalidate(2, imageUrl = $$props.imageUrl);
+    		if ('description' in $$props) $$invalidate(3, description = $$props.description);
+    		if ('address' in $$props) $$invalidate(4, address = $$props.address);
+    		if ('email' in $$props) $$invalidate(5, email = $$props.email);
+    		if ('isFav' in $$props) $$invalidate(6, isFav = $$props.isFav);
     	};
 
     	if ($$props && "$$inject" in $$props) {
@@ -1514,7 +1686,6 @@ var app = (function () {
     	}
 
     	return [
-    		id,
     		title,
     		subtitle,
     		imageUrl,
@@ -1522,8 +1693,8 @@ var app = (function () {
     		address,
     		email,
     		isFav,
-    		dispatch,
-    		click_handler
+    		togglefavorite,
+    		id
     	];
     }
 
@@ -1532,14 +1703,14 @@ var app = (function () {
     		super(options);
 
     		init(this, options, instance$5, create_fragment$5, safe_not_equal, {
-    			id: 0,
-    			title: 1,
-    			subtitle: 2,
-    			imageUrl: 3,
-    			description: 4,
-    			address: 5,
-    			email: 6,
-    			isFav: 7
+    			id: 8,
+    			title: 0,
+    			subtitle: 1,
+    			imageUrl: 2,
+    			description: 3,
+    			address: 4,
+    			email: 5,
+    			isFav: 6
     		});
 
     		dispatch_dev("SvelteRegisterComponent", {
@@ -1552,35 +1723,35 @@ var app = (function () {
     		const { ctx } = this.$$;
     		const props = options.props || {};
 
-    		if (/*id*/ ctx[0] === undefined && !('id' in props)) {
+    		if (/*id*/ ctx[8] === undefined && !('id' in props)) {
     			console.warn("<MeetupItem> was created without expected prop 'id'");
     		}
 
-    		if (/*title*/ ctx[1] === undefined && !('title' in props)) {
+    		if (/*title*/ ctx[0] === undefined && !('title' in props)) {
     			console.warn("<MeetupItem> was created without expected prop 'title'");
     		}
 
-    		if (/*subtitle*/ ctx[2] === undefined && !('subtitle' in props)) {
+    		if (/*subtitle*/ ctx[1] === undefined && !('subtitle' in props)) {
     			console.warn("<MeetupItem> was created without expected prop 'subtitle'");
     		}
 
-    		if (/*imageUrl*/ ctx[3] === undefined && !('imageUrl' in props)) {
+    		if (/*imageUrl*/ ctx[2] === undefined && !('imageUrl' in props)) {
     			console.warn("<MeetupItem> was created without expected prop 'imageUrl'");
     		}
 
-    		if (/*description*/ ctx[4] === undefined && !('description' in props)) {
+    		if (/*description*/ ctx[3] === undefined && !('description' in props)) {
     			console.warn("<MeetupItem> was created without expected prop 'description'");
     		}
 
-    		if (/*address*/ ctx[5] === undefined && !('address' in props)) {
+    		if (/*address*/ ctx[4] === undefined && !('address' in props)) {
     			console.warn("<MeetupItem> was created without expected prop 'address'");
     		}
 
-    		if (/*email*/ ctx[6] === undefined && !('email' in props)) {
+    		if (/*email*/ ctx[5] === undefined && !('email' in props)) {
     			console.warn("<MeetupItem> was created without expected prop 'email'");
     		}
 
-    		if (/*isFav*/ ctx[7] === undefined && !('isFav' in props)) {
+    		if (/*isFav*/ ctx[6] === undefined && !('isFav' in props)) {
     			console.warn("<MeetupItem> was created without expected prop 'isFav'");
     		}
     	}
@@ -1655,7 +1826,7 @@ var app = (function () {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[2] = list[i];
+    	child_ctx[1] = list[i];
     	return child_ctx;
     }
 
@@ -1666,19 +1837,17 @@ var app = (function () {
 
     	meetupitem = new MeetupItem({
     			props: {
-    				id: /*meetup*/ ctx[2].id,
-    				title: /*meetup*/ ctx[2].title,
-    				subtitle: /*meetup*/ ctx[2].subtitle,
-    				description: /*meetup*/ ctx[2].description,
-    				imageUrl: /*meetup*/ ctx[2].imageUrl,
-    				address: /*meetup*/ ctx[2].address,
-    				email: /*meetup*/ ctx[2].contactEmail,
-    				isFav: /*meetup*/ ctx[2].isFavorite
+    				id: /*meetup*/ ctx[1].id,
+    				title: /*meetup*/ ctx[1].title,
+    				subtitle: /*meetup*/ ctx[1].subtitle,
+    				description: /*meetup*/ ctx[1].description,
+    				imageUrl: /*meetup*/ ctx[1].imageUrl,
+    				address: /*meetup*/ ctx[1].address,
+    				email: /*meetup*/ ctx[1].contactEmail,
+    				isFav: /*meetup*/ ctx[1].isFavorite
     			},
     			$$inline: true
     		});
-
-    	meetupitem.$on("togglefavorite", /*togglefavorite_handler*/ ctx[1]);
 
     	const block = {
     		c: function create() {
@@ -1690,14 +1859,14 @@ var app = (function () {
     		},
     		p: function update(ctx, dirty) {
     			const meetupitem_changes = {};
-    			if (dirty & /*meetups*/ 1) meetupitem_changes.id = /*meetup*/ ctx[2].id;
-    			if (dirty & /*meetups*/ 1) meetupitem_changes.title = /*meetup*/ ctx[2].title;
-    			if (dirty & /*meetups*/ 1) meetupitem_changes.subtitle = /*meetup*/ ctx[2].subtitle;
-    			if (dirty & /*meetups*/ 1) meetupitem_changes.description = /*meetup*/ ctx[2].description;
-    			if (dirty & /*meetups*/ 1) meetupitem_changes.imageUrl = /*meetup*/ ctx[2].imageUrl;
-    			if (dirty & /*meetups*/ 1) meetupitem_changes.address = /*meetup*/ ctx[2].address;
-    			if (dirty & /*meetups*/ 1) meetupitem_changes.email = /*meetup*/ ctx[2].contactEmail;
-    			if (dirty & /*meetups*/ 1) meetupitem_changes.isFav = /*meetup*/ ctx[2].isFavorite;
+    			if (dirty & /*meetups*/ 1) meetupitem_changes.id = /*meetup*/ ctx[1].id;
+    			if (dirty & /*meetups*/ 1) meetupitem_changes.title = /*meetup*/ ctx[1].title;
+    			if (dirty & /*meetups*/ 1) meetupitem_changes.subtitle = /*meetup*/ ctx[1].subtitle;
+    			if (dirty & /*meetups*/ 1) meetupitem_changes.description = /*meetup*/ ctx[1].description;
+    			if (dirty & /*meetups*/ 1) meetupitem_changes.imageUrl = /*meetup*/ ctx[1].imageUrl;
+    			if (dirty & /*meetups*/ 1) meetupitem_changes.address = /*meetup*/ ctx[1].address;
+    			if (dirty & /*meetups*/ 1) meetupitem_changes.email = /*meetup*/ ctx[1].contactEmail;
+    			if (dirty & /*meetups*/ 1) meetupitem_changes.isFav = /*meetup*/ ctx[1].isFavorite;
     			meetupitem.$set(meetupitem_changes);
     		},
     		i: function intro(local) {
@@ -1838,10 +2007,6 @@ var app = (function () {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<MeetupGrid> was created with unknown prop '${key}'`);
     	});
 
-    	function togglefavorite_handler(event) {
-    		bubble.call(this, $$self, event);
-    	}
-
     	$$self.$$set = $$props => {
     		if ('meetups' in $$props) $$invalidate(0, meetups = $$props.meetups);
     	};
@@ -1856,7 +2021,7 @@ var app = (function () {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [meetups, togglefavorite_handler];
+    	return [meetups];
     }
 
     class MeetupGrid extends SvelteComponentDev {
@@ -2658,7 +2823,7 @@ var app = (function () {
     /* src/Meetups/EditMeetup.svelte generated by Svelte v3.46.3 */
     const file$1 = "src/Meetups/EditMeetup.svelte";
 
-    // (44:0) <Modal title="Edit Meetup Data" on:cancel>
+    // (48:0) <Modal title="Edit Meetup Data" on:cancel>
     function create_default_slot_2(ctx) {
     	let form;
     	let textinput0;
@@ -2771,7 +2936,7 @@ var app = (function () {
     			t4 = space();
     			create_component(textinput5.$$.fragment);
     			attr_dev(form, "class", "svelte-no1xoc");
-    			add_location(form, file$1, 44, 2, 1093);
+    			add_location(form, file$1, 48, 2, 1193);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, form, anchor);
@@ -2855,14 +3020,14 @@ var app = (function () {
     		block,
     		id: create_default_slot_2.name,
     		type: "slot",
-    		source: "(44:0) <Modal title=\\\"Edit Meetup Data\\\" on:cancel>",
+    		source: "(48:0) <Modal title=\\\"Edit Meetup Data\\\" on:cancel>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (98:4) <Button type="button" mode="outline" on:click={cancel}>
+    // (102:4) <Button type="button" mode="outline" on:click={cancel}>
     function create_default_slot_1(ctx) {
     	let t;
 
@@ -2882,14 +3047,14 @@ var app = (function () {
     		block,
     		id: create_default_slot_1.name,
     		type: "slot",
-    		source: "(98:4) <Button type=\\\"button\\\" mode=\\\"outline\\\" on:click={cancel}>",
+    		source: "(102:4) <Button type=\\\"button\\\" mode=\\\"outline\\\" on:click={cancel}>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (99:4) <Button type="button" on:click={submitForm} disabled={!formIsValid}>
+    // (103:4) <Button type="button" on:click={submitForm} disabled={!formIsValid}>
     function create_default_slot$1(ctx) {
     	let t;
 
@@ -2909,14 +3074,14 @@ var app = (function () {
     		block,
     		id: create_default_slot$1.name,
     		type: "slot",
-    		source: "(99:4) <Button type=\\\"button\\\" on:click={submitForm} disabled={!formIsValid}>",
+    		source: "(103:4) <Button type=\\\"button\\\" on:click={submitForm} disabled={!formIsValid}>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (97:2) 
+    // (101:2) 
     function create_footer_slot(ctx) {
     	let div;
     	let button0;
@@ -2955,7 +3120,7 @@ var app = (function () {
     			t = space();
     			create_component(button1.$$.fragment);
     			attr_dev(div, "slot", "footer");
-    			add_location(div, file$1, 96, 2, 2544);
+    			add_location(div, file$1, 100, 2, 2644);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -3003,7 +3168,7 @@ var app = (function () {
     		block,
     		id: create_footer_slot.name,
     		type: "slot",
-    		source: "(97:2) ",
+    		source: "(101:2) ",
     		ctx
     	});
 
@@ -3092,14 +3257,17 @@ var app = (function () {
     	const dispatch = createEventDispatcher();
 
     	function submitForm() {
-    		dispatch('save', {
+    		const meetupData = {
     			title,
     			subtitle,
-    			address,
+    			description,
     			imageUrl,
-    			email,
-    			description
-    		});
+    			address,
+    			email
+    		};
+
+    		customMeetupsStore.addMeetup(meetupData);
+    		dispatch('save');
     	}
 
     	function cancel() {
@@ -3124,6 +3292,7 @@ var app = (function () {
     	}
 
     	$$self.$capture_state = () => ({
+    		meetups: customMeetupsStore,
     		createEventDispatcher,
     		TextInput,
     		Button,
@@ -3238,182 +3407,11 @@ var app = (function () {
     	}
     }
 
-    const subscriber_queue = [];
-    /**
-     * Create a `Writable` store that allows both updating and reading by subscription.
-     * @param {*=}value initial value
-     * @param {StartStopNotifier=}start start and stop notifications for subscriptions
-     */
-    function writable(value, start = noop) {
-        let stop;
-        const subscribers = new Set();
-        function set(new_value) {
-            if (safe_not_equal(value, new_value)) {
-                value = new_value;
-                if (stop) { // store is ready
-                    const run_queue = !subscriber_queue.length;
-                    for (const subscriber of subscribers) {
-                        subscriber[1]();
-                        subscriber_queue.push(subscriber, value);
-                    }
-                    if (run_queue) {
-                        for (let i = 0; i < subscriber_queue.length; i += 2) {
-                            subscriber_queue[i][0](subscriber_queue[i + 1]);
-                        }
-                        subscriber_queue.length = 0;
-                    }
-                }
-            }
-        }
-        function update(fn) {
-            set(fn(value));
-        }
-        function subscribe(run, invalidate = noop) {
-            const subscriber = [run, invalidate];
-            subscribers.add(subscriber);
-            if (subscribers.size === 1) {
-                stop = start(set) || noop;
-            }
-            run(value);
-            return () => {
-                subscribers.delete(subscriber);
-                if (subscribers.size === 0) {
-                    stop();
-                    stop = null;
-                }
-            };
-        }
-        return { set, update, subscribe };
-    }
-
-    // Unique ID creation requires a high quality random # generator. In the browser we therefore
-    // require the crypto API and do not support built-in fallback to lower quality random number
-    // generators (like Math.random()).
-    var getRandomValues;
-    var rnds8 = new Uint8Array(16);
-    function rng() {
-      // lazy load so that environments that need to polyfill have a chance to do so
-      if (!getRandomValues) {
-        // getRandomValues needs to be invoked in a context where "this" is a Crypto implementation. Also,
-        // find the complete implementation of crypto (msCrypto) on IE11.
-        getRandomValues = typeof crypto !== 'undefined' && crypto.getRandomValues && crypto.getRandomValues.bind(crypto) || typeof msCrypto !== 'undefined' && typeof msCrypto.getRandomValues === 'function' && msCrypto.getRandomValues.bind(msCrypto);
-
-        if (!getRandomValues) {
-          throw new Error('crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported');
-        }
-      }
-
-      return getRandomValues(rnds8);
-    }
-
-    var REGEX = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i;
-
-    function validate(uuid) {
-      return typeof uuid === 'string' && REGEX.test(uuid);
-    }
-
-    /**
-     * Convert array of 16 byte values to UUID string format of the form:
-     * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
-     */
-
-    var byteToHex = [];
-
-    for (var i = 0; i < 256; ++i) {
-      byteToHex.push((i + 0x100).toString(16).substr(1));
-    }
-
-    function stringify(arr) {
-      var offset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-      // Note: Be careful editing this code!  It's been tuned for performance
-      // and works in ways you may not expect. See https://github.com/uuidjs/uuid/pull/434
-      var uuid = (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + '-' + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + '-' + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + '-' + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + '-' + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase(); // Consistency check for valid UUID.  If this throws, it's likely due to one
-      // of the following:
-      // - One or more input array values don't map to a hex octet (leading to
-      // "undefined" in the uuid)
-      // - Invalid input values for the RFC `version` or `variant` fields
-
-      if (!validate(uuid)) {
-        throw TypeError('Stringified UUID is invalid');
-      }
-
-      return uuid;
-    }
-
-    function v4(options, buf, offset) {
-      options = options || {};
-      var rnds = options.random || (options.rng || rng)(); // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
-
-      rnds[6] = rnds[6] & 0x0f | 0x40;
-      rnds[8] = rnds[8] & 0x3f | 0x80; // Copy bytes to buffer, if provided
-
-      if (buf) {
-        offset = offset || 0;
-
-        for (var i = 0; i < 16; ++i) {
-          buf[offset + i] = rnds[i];
-        }
-
-        return buf;
-      }
-
-      return stringify(rnds);
-    }
-
-    const meetups = writable([
-      {
-        id: v4(),
-        title: 'Coding Bootcamp',
-        subtitle: 'Learn to code',
-        description: 'In this meetup we will learn to code',
-        imageUrl:
-          'https://akm-img-a-in.tosshub.com/indiatoday/images/story/202012/chris-ried-ieic5Tq8YMk-unsplas_1200x768.jpeg?bEhcYQAShJnLf0Mtu4JYq8YzICfhz2rB&size=770:433',
-        address: '24th Nerd Road, 100 Tórshavn',
-        contactEmail: 'learntocode@test.com',
-        isFavorite: false,
-      },
-      {
-        id: v4(),
-        title: 'Drink beer',
-        subtitle: 'Friends',
-        description: 'In this meetup we will drink beer',
-        imageUrl: 'https://picsum.photos/id/237/200/300',
-        address: '245th Nerd Road, 900 Vágur',
-        contactEmail: 'beer@test.com',
-        isFavorite: false,
-      },
-    ]);
-
-    const customMeetupsStore = {
-      subscribe: meetups.subscribe,
-      addMeetup: meetupData => {
-        const newMeetup = {
-          ...meetupData,
-          id: v4(),
-          isFavorite: false,
-        };
-
-        meetups.update(items => {
-          return [newMeetup, ...items];
-        });
-      },
-      toggleFavorite: id => {
-        meetups.update(items => {
-          const updatedMeetup = { ...items.find(m => m.id === id) };
-          updatedMeetup.isFavorite = !updatedMeetup.isFavorite;
-          const meetupIndex = items.findIndex(m => m.id === id);
-          const updatedMeetups = [...items];
-          updatedMeetups[meetupIndex] = updatedMeetup;
-          return updatedMeetups;
-        });
-      },
-    };
-
     /* src/App.svelte generated by Svelte v3.46.3 */
 
     const file = "src/App.svelte";
 
-    // (41:4) <Button on:click={() => (editMode = 'add')}>
+    // (27:4) <Button on:click={() => (editMode = 'add')}>
     function create_default_slot(ctx) {
     	let t;
 
@@ -3433,20 +3431,20 @@ var app = (function () {
     		block,
     		id: create_default_slot.name,
     		type: "slot",
-    		source: "(41:4) <Button on:click={() => (editMode = 'add')}>",
+    		source: "(27:4) <Button on:click={() => (editMode = 'add')}>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (43:2) {#if editMode === 'add'}
+    // (29:2) {#if editMode === 'add'}
     function create_if_block(ctx) {
     	let editmeetup;
     	let current;
     	editmeetup = new EditMeetup({ $$inline: true });
     	editmeetup.$on("save", /*addMeetup*/ ctx[2]);
-    	editmeetup.$on("cancel", /*cancelEdit*/ ctx[4]);
+    	editmeetup.$on("cancel", /*cancelEdit*/ ctx[3]);
 
     	const block = {
     		c: function create() {
@@ -3475,7 +3473,7 @@ var app = (function () {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(43:2) {#if editMode === 'add'}",
+    		source: "(29:2) {#if editMode === 'add'}",
     		ctx
     	});
 
@@ -3502,15 +3500,13 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	button.$on("click", /*click_handler*/ ctx[5]);
+    	button.$on("click", /*click_handler*/ ctx[4]);
     	let if_block = /*editMode*/ ctx[0] === 'add' && create_if_block(ctx);
 
     	meetupgrid = new MeetupGrid({
     			props: { meetups: /*$meetups*/ ctx[1] },
     			$$inline: true
     		});
-
-    	meetupgrid.$on("togglefavorite", /*toggleFavorite*/ ctx[3]);
 
     	const block = {
     		c: function create() {
@@ -3524,9 +3520,9 @@ var app = (function () {
     			t2 = space();
     			create_component(meetupgrid.$$.fragment);
     			attr_dev(div, "class", "meetup-controls svelte-v8dol7");
-    			add_location(div, file, 39, 2, 872);
+    			add_location(div, file, 25, 2, 474);
     			attr_dev(main, "class", "svelte-v8dol7");
-    			add_location(main, file, 38, 0, 863);
+    			add_location(main, file, 24, 0, 465);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -3546,7 +3542,7 @@ var app = (function () {
     		p: function update(ctx, [dirty]) {
     			const button_changes = {};
 
-    			if (dirty & /*$$scope*/ 64) {
+    			if (dirty & /*$$scope*/ 32) {
     				button_changes.$$scope = { dirty, ctx };
     			}
 
@@ -3625,22 +3621,7 @@ var app = (function () {
 
     	// Add meetup
     	function addMeetup(event) {
-    		const meetupData = {
-    			title: event.detail.title,
-    			subtitle: event.detail.title,
-    			description: event.detail.description,
-    			imageUrl: event.detail.imageUrl,
-    			address: event.detail.address,
-    			contactEmail: event.detail.email
-    		};
-
-    		customMeetupsStore.addMeetup(meetupData);
     		$$invalidate(0, editMode = null);
-    	}
-
-    	function toggleFavorite(event) {
-    		const id = event.detail;
-    		customMeetupsStore.toggleFavorite(id);
     	}
 
     	function cancelEdit() {
@@ -3663,7 +3644,6 @@ var app = (function () {
     		meetups: customMeetupsStore,
     		editMode,
     		addMeetup,
-    		toggleFavorite,
     		cancelEdit,
     		$meetups
     	});
@@ -3676,7 +3656,7 @@ var app = (function () {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [editMode, $meetups, addMeetup, toggleFavorite, cancelEdit, click_handler];
+    	return [editMode, $meetups, addMeetup, cancelEdit, click_handler];
     }
 
     class App extends SvelteComponentDev {
