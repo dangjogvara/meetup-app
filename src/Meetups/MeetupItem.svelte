@@ -39,6 +39,7 @@
     <p>{description}</p>
   </div>
   <footer>
+    <Button mode="outline" type="button" on:click={() => dispatch('edit', id)}>Edit</Button>
     <Button href="mailto:{email}">Contact</Button>
     <Button mode="outline" color={isFav ? null : 'success'} type="button" on:click={togglefavorite}
       >{isFav ? 'Unfavorite' : 'Favorite'}</Button

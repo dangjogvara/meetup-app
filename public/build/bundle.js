@@ -538,7 +538,7 @@ var app = (function () {
     			h1 = element("h1");
     			h1.textContent = "MeetUs";
     			attr_dev(h1, "class", "svelte-cbgezr");
-    			add_location(h1, file$9, 1, 2, 12);
+    			add_location(h1, file$9, 1, 2, 11);
     			attr_dev(header, "class", "svelte-cbgezr");
     			add_location(header, file$9, 0, 0, 0);
     		},
@@ -615,7 +615,7 @@ var app = (function () {
     			attr_dev(button, "class", button_class_value = "" + (/*mode*/ ctx[2] + " " + /*color*/ ctx[3] + " svelte-g32zaw"));
     			attr_dev(button, "type", /*type*/ ctx[0]);
     			button.disabled = /*disabled*/ ctx[4];
-    			add_location(button, file$8, 13, 2, 227);
+    			add_location(button, file$8, 13, 2, 214);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, button, anchor);
@@ -700,7 +700,7 @@ var app = (function () {
     			if (default_slot) default_slot.c();
     			attr_dev(a, "href", /*href*/ ctx[1]);
     			attr_dev(a, "class", "svelte-g32zaw");
-    			add_location(a, file$8, 9, 2, 182);
+    			add_location(a, file$8, 9, 2, 173);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, a, anchor);
@@ -1103,6 +1103,15 @@ var app = (function () {
           return [newMeetup, ...items];
         });
       },
+      updateMeetup: (id, meetupData) => {
+        meetups.update(items => {
+          const meetupIndex = items.findIndex(i => i.id === id);
+          const updatedMeetup = { ...items[meetupIndex], meetupData };
+          const updatedMeetups = [...items];
+          updatedMeetups[meetupIndex] = updatedMeetup;
+          return updatedMeetups;
+        });
+      },
       toggleFavorite: id => {
         meetups.update(items => {
           const updatedMeetup = { ...items.find(m => m.id === id) };
@@ -1226,7 +1235,7 @@ var app = (function () {
 
     	badge = new Badge({
     			props: {
-    				$$slots: { default: [create_default_slot_3] },
+    				$$slots: { default: [create_default_slot_4] },
     				$$scope: { ctx }
     			},
     			$$inline: true
@@ -1266,7 +1275,7 @@ var app = (function () {
     }
 
     // (29:8) <Badge>
-    function create_default_slot_3(ctx) {
+    function create_default_slot_4(ctx) {
     	let t;
 
     	const block = {
@@ -1283,7 +1292,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot_3.name,
+    		id: create_default_slot_4.name,
     		type: "slot",
     		source: "(29:8) <Badge>",
     		ctx
@@ -1292,7 +1301,34 @@ var app = (function () {
     	return block;
     }
 
-    // (42:4) <Button href="mailto:{email}">
+    // (42:4) <Button mode="outline" type="button" on:click={() => dispatch('edit', id)}>
+    function create_default_slot_3(ctx) {
+    	let t;
+
+    	const block = {
+    		c: function create() {
+    			t = text("Edit");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t, anchor);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot_3.name,
+    		type: "slot",
+    		source: "(42:4) <Button mode=\\\"outline\\\" type=\\\"button\\\" on:click={() => dispatch('edit', id)}>",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (43:4) <Button href="mailto:{email}">
     function create_default_slot_2$1(ctx) {
     	let t;
 
@@ -1312,14 +1348,14 @@ var app = (function () {
     		block,
     		id: create_default_slot_2$1.name,
     		type: "slot",
-    		source: "(42:4) <Button href=\\\"mailto:{email}\\\">",
+    		source: "(43:4) <Button href=\\\"mailto:{email}\\\">",
     		ctx
     	});
 
     	return block;
     }
 
-    // (43:4) <Button mode="outline" color={isFav ? null : 'success'} type="button" on:click={togglefavorite}        >
+    // (44:4) <Button mode="outline" color={isFav ? null : 'success'} type="button" on:click={togglefavorite}       >
     function create_default_slot_1$2(ctx) {
     	let t_value = (/*isFav*/ ctx[7] ? 'Unfavorite' : 'Favorite') + "";
     	let t;
@@ -1343,14 +1379,14 @@ var app = (function () {
     		block,
     		id: create_default_slot_1$2.name,
     		type: "slot",
-    		source: "(43:4) <Button mode=\\\"outline\\\" color={isFav ? null : 'success'} type=\\\"button\\\" on:click={togglefavorite}        >",
+    		source: "(44:4) <Button mode=\\\"outline\\\" color={isFav ? null : 'success'} type=\\\"button\\\" on:click={togglefavorite}       >",
     		ctx
     	});
 
     	return block;
     }
 
-    // (46:4) <Button type="button" on:click={() => dispatch('showdetails', id)}>
+    // (47:4) <Button type="button" on:click={() => dispatch('showdetails', id)}>
     function create_default_slot$4(ctx) {
     	let t;
 
@@ -1370,7 +1406,7 @@ var app = (function () {
     		block,
     		id: create_default_slot$4.name,
     		type: "slot",
-    		source: "(46:4) <Button type=\\\"button\\\" on:click={() => dispatch('showdetails', id)}>",
+    		source: "(47:4) <Button type=\\\"button\\\" on:click={() => dispatch('showdetails', id)}>",
     		ctx
     	});
 
@@ -1404,10 +1440,24 @@ var app = (function () {
     	let button1;
     	let t11;
     	let button2;
+    	let t12;
+    	let button3;
     	let current;
     	let if_block = /*isFav*/ ctx[7] && create_if_block$2(ctx);
 
     	button0 = new Button({
+    			props: {
+    				mode: "outline",
+    				type: "button",
+    				$$slots: { default: [create_default_slot_3] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
+
+    	button0.$on("click", /*click_handler*/ ctx[10]);
+
+    	button1 = new Button({
     			props: {
     				href: "mailto:" + /*email*/ ctx[6],
     				$$slots: { default: [create_default_slot_2$1] },
@@ -1416,7 +1466,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	button1 = new Button({
+    	button2 = new Button({
     			props: {
     				mode: "outline",
     				color: /*isFav*/ ctx[7] ? null : 'success',
@@ -1427,9 +1477,9 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	button1.$on("click", /*togglefavorite*/ ctx[9]);
+    	button2.$on("click", /*togglefavorite*/ ctx[9]);
 
-    	button2 = new Button({
+    	button3 = new Button({
     			props: {
     				type: "button",
     				$$slots: { default: [create_default_slot$4] },
@@ -1438,7 +1488,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	button2.$on("click", /*click_handler*/ ctx[10]);
+    	button3.$on("click", /*click_handler_1*/ ctx[11]);
 
     	const block = {
     		c: function create() {
@@ -1468,28 +1518,30 @@ var app = (function () {
     			create_component(button1.$$.fragment);
     			t11 = space();
     			create_component(button2.$$.fragment);
+    			t12 = space();
+    			create_component(button3.$$.fragment);
     			attr_dev(h1, "class", "svelte-lym3nh");
-    			add_location(h1, file$6, 25, 4, 532);
+    			add_location(h1, file$6, 25, 4, 507);
     			attr_dev(h2, "class", "svelte-lym3nh");
-    			add_location(h2, file$6, 31, 4, 633);
+    			add_location(h2, file$6, 31, 4, 602);
     			attr_dev(p0, "class", "svelte-lym3nh");
-    			add_location(p0, file$6, 32, 4, 658);
+    			add_location(p0, file$6, 32, 4, 626);
     			attr_dev(header, "class", "svelte-lym3nh");
-    			add_location(header, file$6, 24, 2, 518);
+    			add_location(header, file$6, 24, 2, 494);
     			if (!src_url_equal(img.src, img_src_value = /*imageUrl*/ ctx[3])) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", /*title*/ ctx[1]);
     			attr_dev(img, "class", "svelte-lym3nh");
-    			add_location(img, file$6, 35, 4, 716);
+    			add_location(img, file$6, 35, 4, 681);
     			attr_dev(div0, "class", "image svelte-lym3nh");
-    			add_location(div0, file$6, 34, 2, 691);
+    			add_location(div0, file$6, 34, 2, 657);
     			attr_dev(p1, "class", "svelte-lym3nh");
-    			add_location(p1, file$6, 38, 4, 791);
+    			add_location(p1, file$6, 38, 4, 753);
     			attr_dev(div1, "class", "content svelte-lym3nh");
-    			add_location(div1, file$6, 37, 2, 764);
+    			add_location(div1, file$6, 37, 2, 727);
     			attr_dev(footer, "class", "svelte-lym3nh");
-    			add_location(footer, file$6, 40, 2, 825);
+    			add_location(footer, file$6, 40, 2, 785);
     			attr_dev(article, "class", "svelte-lym3nh");
-    			add_location(article, file$6, 23, 0, 505);
+    			add_location(article, file$6, 23, 0, 482);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1521,6 +1573,8 @@ var app = (function () {
     			mount_component(button1, footer, null);
     			append_dev(footer, t11);
     			mount_component(button2, footer, null);
+    			append_dev(footer, t12);
+    			mount_component(button3, footer, null);
     			current = true;
     		},
     		p: function update(ctx, [dirty]) {
@@ -1560,28 +1614,35 @@ var app = (function () {
 
     			if (!current || dirty & /*description*/ 16) set_data_dev(t8, /*description*/ ctx[4]);
     			const button0_changes = {};
-    			if (dirty & /*email*/ 64) button0_changes.href = "mailto:" + /*email*/ ctx[6];
 
-    			if (dirty & /*$$scope*/ 2048) {
+    			if (dirty & /*$$scope*/ 4096) {
     				button0_changes.$$scope = { dirty, ctx };
     			}
 
     			button0.$set(button0_changes);
     			const button1_changes = {};
-    			if (dirty & /*isFav*/ 128) button1_changes.color = /*isFav*/ ctx[7] ? null : 'success';
+    			if (dirty & /*email*/ 64) button1_changes.href = "mailto:" + /*email*/ ctx[6];
 
-    			if (dirty & /*$$scope, isFav*/ 2176) {
+    			if (dirty & /*$$scope*/ 4096) {
     				button1_changes.$$scope = { dirty, ctx };
     			}
 
     			button1.$set(button1_changes);
     			const button2_changes = {};
+    			if (dirty & /*isFav*/ 128) button2_changes.color = /*isFav*/ ctx[7] ? null : 'success';
 
-    			if (dirty & /*$$scope*/ 2048) {
+    			if (dirty & /*$$scope, isFav*/ 4224) {
     				button2_changes.$$scope = { dirty, ctx };
     			}
 
     			button2.$set(button2_changes);
+    			const button3_changes = {};
+
+    			if (dirty & /*$$scope*/ 4096) {
+    				button3_changes.$$scope = { dirty, ctx };
+    			}
+
+    			button3.$set(button3_changes);
     		},
     		i: function intro(local) {
     			if (current) return;
@@ -1589,6 +1650,7 @@ var app = (function () {
     			transition_in(button0.$$.fragment, local);
     			transition_in(button1.$$.fragment, local);
     			transition_in(button2.$$.fragment, local);
+    			transition_in(button3.$$.fragment, local);
     			current = true;
     		},
     		o: function outro(local) {
@@ -1596,6 +1658,7 @@ var app = (function () {
     			transition_out(button0.$$.fragment, local);
     			transition_out(button1.$$.fragment, local);
     			transition_out(button2.$$.fragment, local);
+    			transition_out(button3.$$.fragment, local);
     			current = false;
     		},
     		d: function destroy(detaching) {
@@ -1604,6 +1667,7 @@ var app = (function () {
     			destroy_component(button0);
     			destroy_component(button1);
     			destroy_component(button2);
+    			destroy_component(button3);
     		}
     	};
 
@@ -1650,7 +1714,8 @@ var app = (function () {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<MeetupItem> was created with unknown prop '${key}'`);
     	});
 
-    	const click_handler = () => dispatch('showdetails', id);
+    	const click_handler = () => dispatch('edit', id);
+    	const click_handler_1 = () => dispatch('showdetails', id);
 
     	$$self.$$set = $$props => {
     		if ('id' in $$props) $$invalidate(0, id = $$props.id);
@@ -1706,7 +1771,8 @@ var app = (function () {
     		isFav,
     		dispatch,
     		togglefavorite,
-    		click_handler
+    		click_handler,
+    		click_handler_1
     	];
     }
 
@@ -1838,7 +1904,7 @@ var app = (function () {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[2] = list[i];
+    	child_ctx[3] = list[i];
     	return child_ctx;
     }
 
@@ -1849,19 +1915,20 @@ var app = (function () {
 
     	meetupitem = new MeetupItem({
     			props: {
-    				id: /*meetup*/ ctx[2].id,
-    				title: /*meetup*/ ctx[2].title,
-    				subtitle: /*meetup*/ ctx[2].subtitle,
-    				description: /*meetup*/ ctx[2].description,
-    				imageUrl: /*meetup*/ ctx[2].imageUrl,
-    				address: /*meetup*/ ctx[2].address,
-    				email: /*meetup*/ ctx[2].contactEmail,
-    				isFav: /*meetup*/ ctx[2].isFavorite
+    				id: /*meetup*/ ctx[3].id,
+    				title: /*meetup*/ ctx[3].title,
+    				subtitle: /*meetup*/ ctx[3].subtitle,
+    				description: /*meetup*/ ctx[3].description,
+    				imageUrl: /*meetup*/ ctx[3].imageUrl,
+    				address: /*meetup*/ ctx[3].address,
+    				email: /*meetup*/ ctx[3].contactEmail,
+    				isFav: /*meetup*/ ctx[3].isFavorite
     			},
     			$$inline: true
     		});
 
     	meetupitem.$on("showdetails", /*showdetails_handler*/ ctx[1]);
+    	meetupitem.$on("edit", /*edit_handler*/ ctx[2]);
 
     	const block = {
     		c: function create() {
@@ -1873,14 +1940,14 @@ var app = (function () {
     		},
     		p: function update(ctx, dirty) {
     			const meetupitem_changes = {};
-    			if (dirty & /*meetups*/ 1) meetupitem_changes.id = /*meetup*/ ctx[2].id;
-    			if (dirty & /*meetups*/ 1) meetupitem_changes.title = /*meetup*/ ctx[2].title;
-    			if (dirty & /*meetups*/ 1) meetupitem_changes.subtitle = /*meetup*/ ctx[2].subtitle;
-    			if (dirty & /*meetups*/ 1) meetupitem_changes.description = /*meetup*/ ctx[2].description;
-    			if (dirty & /*meetups*/ 1) meetupitem_changes.imageUrl = /*meetup*/ ctx[2].imageUrl;
-    			if (dirty & /*meetups*/ 1) meetupitem_changes.address = /*meetup*/ ctx[2].address;
-    			if (dirty & /*meetups*/ 1) meetupitem_changes.email = /*meetup*/ ctx[2].contactEmail;
-    			if (dirty & /*meetups*/ 1) meetupitem_changes.isFav = /*meetup*/ ctx[2].isFavorite;
+    			if (dirty & /*meetups*/ 1) meetupitem_changes.id = /*meetup*/ ctx[3].id;
+    			if (dirty & /*meetups*/ 1) meetupitem_changes.title = /*meetup*/ ctx[3].title;
+    			if (dirty & /*meetups*/ 1) meetupitem_changes.subtitle = /*meetup*/ ctx[3].subtitle;
+    			if (dirty & /*meetups*/ 1) meetupitem_changes.description = /*meetup*/ ctx[3].description;
+    			if (dirty & /*meetups*/ 1) meetupitem_changes.imageUrl = /*meetup*/ ctx[3].imageUrl;
+    			if (dirty & /*meetups*/ 1) meetupitem_changes.address = /*meetup*/ ctx[3].address;
+    			if (dirty & /*meetups*/ 1) meetupitem_changes.email = /*meetup*/ ctx[3].contactEmail;
+    			if (dirty & /*meetups*/ 1) meetupitem_changes.isFav = /*meetup*/ ctx[3].isFavorite;
     			meetupitem.$set(meetupitem_changes);
     		},
     		i: function intro(local) {
@@ -1933,7 +2000,7 @@ var app = (function () {
 
     			attr_dev(section, "id", "meetups");
     			attr_dev(section, "class", "svelte-181fmcx");
-    			add_location(section, file$5, 6, 0, 97);
+    			add_location(section, file$5, 6, 0, 91);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -2025,6 +2092,10 @@ var app = (function () {
     		bubble.call(this, $$self, event);
     	}
 
+    	function edit_handler(event) {
+    		bubble.call(this, $$self, event);
+    	}
+
     	$$self.$$set = $$props => {
     		if ('meetups' in $$props) $$invalidate(0, meetups = $$props.meetups);
     	};
@@ -2039,7 +2110,7 @@ var app = (function () {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [meetups, showdetails_handler];
+    	return [meetups, showdetails_handler, edit_handler];
     }
 
     class MeetupGrid extends SvelteComponentDev {
@@ -2089,7 +2160,7 @@ var app = (function () {
     			input.value = /*value*/ ctx[4];
     			attr_dev(input, "class", "svelte-1mrfx4j");
     			toggle_class(input, "invalid", !/*valid*/ ctx[6] && /*touched*/ ctx[8]);
-    			add_location(input, file$4, 25, 4, 538);
+    			add_location(input, file$4, 25, 4, 513);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, input, anchor);
@@ -2152,7 +2223,7 @@ var app = (function () {
     			textarea.value = /*value*/ ctx[4];
     			attr_dev(textarea, "class", "svelte-1mrfx4j");
     			toggle_class(textarea, "invalid", !/*valid*/ ctx[6] && /*touched*/ ctx[8]);
-    			add_location(textarea, file$4, 16, 4, 366);
+    			add_location(textarea, file$4, 16, 4, 350);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, textarea, anchor);
@@ -2211,7 +2282,7 @@ var app = (function () {
     			p = element("p");
     			t = text(/*validityMessage*/ ctx[7]);
     			attr_dev(p, "class", "error-message svelte-1mrfx4j");
-    			add_location(p, file$4, 35, 4, 751);
+    			add_location(p, file$4, 35, 4, 716);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -2263,9 +2334,9 @@ var app = (function () {
     			if (if_block1) if_block1.c();
     			attr_dev(label_1, "for", /*id*/ ctx[1]);
     			attr_dev(label_1, "class", "svelte-1mrfx4j");
-    			add_location(label_1, file$4, 14, 2, 293);
+    			add_location(label_1, file$4, 14, 2, 279);
     			attr_dev(div, "class", "form-control svelte-1mrfx4j");
-    			add_location(div, file$4, 13, 0, 263);
+    			add_location(div, file$4, 13, 0, 250);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -2561,7 +2632,7 @@ var app = (function () {
     	return block;
     }
 
-    // (21:24)         
+    // (21:24)        
     function fallback_block(ctx) {
     	let button;
     	let current;
@@ -2611,7 +2682,7 @@ var app = (function () {
     		block,
     		id: fallback_block.name,
     		type: "fallback",
-    		source: "(21:24)         ",
+    		source: "(21:24)        ",
     		ctx
     	});
 
@@ -2651,15 +2722,15 @@ var app = (function () {
     			footer = element("footer");
     			if (footer_slot_or_fallback) footer_slot_or_fallback.c();
     			attr_dev(div0, "class", "modal-backdrop svelte-rj5ywu");
-    			add_location(div0, file$3, 13, 0, 244);
+    			add_location(div0, file$3, 13, 0, 231);
     			attr_dev(h1, "class", "svelte-rj5ywu");
-    			add_location(h1, file$3, 15, 2, 321);
+    			add_location(h1, file$3, 15, 2, 306);
     			attr_dev(div1, "class", "content svelte-rj5ywu");
-    			add_location(div1, file$3, 16, 2, 341);
+    			add_location(div1, file$3, 16, 2, 325);
     			attr_dev(footer, "class", "svelte-rj5ywu");
-    			add_location(footer, file$3, 19, 2, 390);
+    			add_location(footer, file$3, 19, 2, 371);
     			attr_dev(div2, "class", "modal svelte-rj5ywu");
-    			add_location(div2, file$3, 14, 0, 298);
+    			add_location(div2, file$3, 14, 0, 284);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -2954,7 +3025,7 @@ var app = (function () {
     			t4 = space();
     			create_component(textinput5.$$.fragment);
     			attr_dev(form, "class", "svelte-no1xoc");
-    			add_location(form, file$2, 67, 2, 1750);
+    			add_location(form, file$2, 67, 2, 1683);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, form, anchor);
@@ -3138,7 +3209,7 @@ var app = (function () {
     			t = space();
     			create_component(button1.$$.fragment);
     			attr_dev(div, "slot", "footer");
-    			add_location(div, file$2, 119, 2, 3253);
+    			add_location(div, file$2, 119, 2, 3134);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -3591,19 +3662,19 @@ var app = (function () {
     			if (!src_url_equal(img.src, img_src_value = /*selectedMeetup*/ ctx[0].imageUrl)) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", img_alt_value = /*selectedMeetup*/ ctx[0].title);
     			attr_dev(img, "class", "svelte-8ez2ph");
-    			add_location(img, file$1, 22, 4, 465);
+    			add_location(img, file$1, 22, 4, 443);
     			attr_dev(div0, "class", "image svelte-8ez2ph");
-    			add_location(div0, file$1, 21, 2, 440);
+    			add_location(div0, file$1, 21, 2, 419);
     			attr_dev(h1, "class", "svelte-8ez2ph");
-    			add_location(h1, file$1, 25, 4, 570);
+    			add_location(h1, file$1, 25, 4, 545);
     			attr_dev(h2, "class", "svelte-8ez2ph");
-    			add_location(h2, file$1, 26, 4, 607);
+    			add_location(h2, file$1, 26, 4, 581);
     			attr_dev(p, "class", "svelte-8ez2ph");
-    			add_location(p, file$1, 27, 4, 674);
+    			add_location(p, file$1, 27, 4, 647);
     			attr_dev(div1, "class", "content svelte-8ez2ph");
-    			add_location(div1, file$1, 24, 2, 543);
+    			add_location(div1, file$1, 24, 2, 519);
     			attr_dev(section, "class", "svelte-8ez2ph");
-    			add_location(section, file$1, 20, 0, 427);
+    			add_location(section, file$1, 20, 0, 407);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -3771,7 +3842,7 @@ var app = (function () {
 
     const file = "src/App.svelte";
 
-    // (47:2) {:else}
+    // (51:2) {:else}
     function create_else_block(ctx) {
     	let meetupdetail;
     	let current;
@@ -3781,7 +3852,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	meetupdetail.$on("close", /*closeDetails*/ ctx[7]);
+    	meetupdetail.$on("close", /*closeDetails*/ ctx[8]);
 
     	const block = {
     		c: function create() {
@@ -3814,14 +3885,14 @@ var app = (function () {
     		block,
     		id: create_else_block.name,
     		type: "else",
-    		source: "(47:2) {:else}",
+    		source: "(51:2) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (39:2) {#if page === 'overview'}
+    // (43:2) {#if page === 'overview'}
     function create_if_block(ctx) {
     	let div;
     	let button;
@@ -3838,7 +3909,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	button.$on("click", /*click_handler*/ ctx[8]);
+    	button.$on("click", /*click_handler*/ ctx[9]);
     	let if_block = /*editMode*/ ctx[0] === 'add' && create_if_block_1(ctx);
 
     	meetupgrid = new MeetupGrid({
@@ -3847,6 +3918,7 @@ var app = (function () {
     		});
 
     	meetupgrid.$on("showdetails", /*showDetails*/ ctx[6]);
+    	meetupgrid.$on("edit", /*startEdit*/ ctx[7]);
 
     	const block = {
     		c: function create() {
@@ -3857,7 +3929,7 @@ var app = (function () {
     			t1 = space();
     			create_component(meetupgrid.$$.fragment);
     			attr_dev(div, "class", "meetup-controls svelte-v8dol7");
-    			add_location(div, file, 39, 4, 815);
+    			add_location(div, file, 43, 4, 834);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -3871,7 +3943,7 @@ var app = (function () {
     		p: function update(ctx, dirty) {
     			const button_changes = {};
 
-    			if (dirty & /*$$scope*/ 512) {
+    			if (dirty & /*$$scope*/ 1024) {
     				button_changes.$$scope = { dirty, ctx };
     			}
 
@@ -3931,14 +4003,14 @@ var app = (function () {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(39:2) {#if page === 'overview'}",
+    		source: "(43:2) {#if page === 'overview'}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (41:6) <Button on:click={() => (editMode = 'add')}>
+    // (45:6) <Button on:click={() => (editMode = 'add')}>
     function create_default_slot(ctx) {
     	let t;
 
@@ -3958,14 +4030,14 @@ var app = (function () {
     		block,
     		id: create_default_slot.name,
     		type: "slot",
-    		source: "(41:6) <Button on:click={() => (editMode = 'add')}>",
+    		source: "(45:6) <Button on:click={() => (editMode = 'add')}>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (43:4) {#if editMode === 'add'}
+    // (47:4) {#if editMode === 'add'}
     function create_if_block_1(ctx) {
     	let editmeetup;
     	let current;
@@ -4000,7 +4072,7 @@ var app = (function () {
     		block,
     		id: create_if_block_1.name,
     		type: "if",
-    		source: "(43:4) {#if editMode === 'add'}",
+    		source: "(47:4) {#if editMode === 'add'}",
     		ctx
     	});
 
@@ -4033,7 +4105,7 @@ var app = (function () {
     			main = element("main");
     			if_block.c();
     			attr_dev(main, "class", "svelte-v8dol7");
-    			add_location(main, file, 37, 0, 774);
+    			add_location(main, file, 41, 0, 795);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -4126,6 +4198,10 @@ var app = (function () {
     		$$invalidate(2, pageData.id = event.detail, pageData);
     	}
 
+    	function startEdit(event) {
+    		$$invalidate(0, editMode = 'edit');
+    	}
+
     	function closeDetails() {
     		$$invalidate(1, page = 'overview');
     		$$invalidate(2, pageData = {});
@@ -4152,6 +4228,7 @@ var app = (function () {
     		addMeetup,
     		cancelEdit,
     		showDetails,
+    		startEdit,
     		closeDetails,
     		$meetups
     	});
@@ -4174,6 +4251,7 @@ var app = (function () {
     		addMeetup,
     		cancelEdit,
     		showDetails,
+    		startEdit,
     		closeDetails,
     		click_handler
     	];

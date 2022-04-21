@@ -26,6 +26,10 @@
     pageData.id = event.detail;
   }
 
+  function startEdit(event) {
+    editMode = 'edit';
+  }
+
   function closeDetails() {
     page = 'overview';
     pageData = {};
@@ -43,7 +47,7 @@
     {#if editMode === 'add'}
       <EditMeetup on:save={addMeetup} on:cancel={cancelEdit} />
     {/if}
-    <MeetupGrid meetups={$meetups} on:showdetails={showDetails} />
+    <MeetupGrid meetups={$meetups} on:showdetails={showDetails} on:edit={startEdit} />
   {:else}
     <MeetupDetail id={pageData.id} on:close={closeDetails} />
   {/if}
