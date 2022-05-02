@@ -1,64 +1,68 @@
 <script>
-  import Header from './UI/Header.svelte';
-  import Button from './UI/Button.svelte';
-  import MeetupGrid from './Meetups/MeetupGrid.svelte';
-  import EditMeetup from './Meetups/EditMeetup.svelte';
-  import MeetupDetail from './Meetups/MeetupDetail.svelte';
+    import Header from './UI/Header.svelte';
+    import Button from './UI/Button.svelte';
+    import MeetupGrid from './Meetups/MeetupGrid.svelte';
+    import EditMeetup from './Meetups/EditMeetup.svelte';
+    import MeetupDetail from './Meetups/MeetupDetail.svelte';
 
-  // Import store
-  import meetups from './Meetups/meetups-store';
+    // Import store
+    import meetups from './Meetups/meetups-store';
 
-  let editMode;
-  let page = 'overview';
-  let pageData = {};
+    let editMode;
+    let editedId;
+    let page = 'overview';
+    let pageData = {};
 
-  // Add meetup
-  function addMeetup(event) {
-    editMode = null;
-  }
+    // Add meetup
+    function savedMeetup(event) {
+        editMode = null;
+        editedId = null;
+    }
 
-  function cancelEdit() {
-    editMode = null;
-  }
+    function cancelEdit() {
+        editMode = null;
+        editedId = null;
+    }
 
-  function showDetails(event) {
-    page = 'details';
-    pageData.id = event.detail;
-  }
+    function showDetails(event) {
+        page = 'details';
+        pageData.id = event.detail;
+    }
 
-  function startEdit(event) {
-    editMode = 'edit';
-  }
+    function startEdit(event) {
+        editMode = 'edit';
+        editedId = event.detail;
+    }
 
-  function closeDetails() {
-    page = 'overview';
-    pageData = {};
-  }
+    function closeDetails() {
+        page = 'overview';
+        pageData = {};
+    }
 </script>
 
 <!-- header component -->
 <Header />
 
 <main>
-  {#if page === 'overview'}
-    <div class="meetup-controls">
-      <Button on:click={() => (editMode = 'add')}>New Meetup</Button>
-    </div>
-    {#if editMode === 'add'}
-      <EditMeetup on:save={addMeetup} on:cancel={cancelEdit} />
+    {#if page === 'overview'}
+        <div class="meetup-controls">
+            <Button on:click={() => (editMode = 'edit')}>New Meetup</Button>
+        </div>
+        {#if editMode === 'edit'}
+            <EditMeetup id={editedId} on:save={savedMeetup} on:cancel={cancelEdit} />
+        {/if}
+        <MeetupGrid meetups={$meetups} on:showdetails={showDetails} on:edit={startEdit} />
+    {:else}
+        <MeetupDetail id={pageData.id} on:close={closeDetails} />
     {/if}
-    <MeetupGrid meetups={$meetups} on:showdetails={showDetails} on:edit={startEdit} />
-  {:else}
-    <MeetupDetail id={pageData.id} on:close={closeDetails} />
-  {/if}
 </main>
 
 <style>
-  .meetup-controls {
-    margin: 1rem;
-  }
+    .meetup-controls {
+        margin: 1rem;
+    }
 
-  main {
-    margin-top: 5rem;
-  }
+    main {
+        margin-top: 5rem;
+    }
 </style>
