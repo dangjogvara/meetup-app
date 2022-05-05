@@ -538,7 +538,7 @@ var app = (function () {
     			h1 = element("h1");
     			h1.textContent = "MeetUs";
     			attr_dev(h1, "class", "svelte-cbgezr");
-    			add_location(h1, file$a, 1, 2, 11);
+    			add_location(h1, file$a, 1, 2, 12);
     			attr_dev(header, "class", "svelte-cbgezr");
     			add_location(header, file$a, 0, 0, 0);
     		},
@@ -594,6 +594,191 @@ var app = (function () {
     	}
     }
 
+    const subscriber_queue = [];
+    /**
+     * Create a `Writable` store that allows both updating and reading by subscription.
+     * @param {*=}value initial value
+     * @param {StartStopNotifier=}start start and stop notifications for subscriptions
+     */
+    function writable(value, start = noop) {
+        let stop;
+        const subscribers = new Set();
+        function set(new_value) {
+            if (safe_not_equal(value, new_value)) {
+                value = new_value;
+                if (stop) { // store is ready
+                    const run_queue = !subscriber_queue.length;
+                    for (const subscriber of subscribers) {
+                        subscriber[1]();
+                        subscriber_queue.push(subscriber, value);
+                    }
+                    if (run_queue) {
+                        for (let i = 0; i < subscriber_queue.length; i += 2) {
+                            subscriber_queue[i][0](subscriber_queue[i + 1]);
+                        }
+                        subscriber_queue.length = 0;
+                    }
+                }
+            }
+        }
+        function update(fn) {
+            set(fn(value));
+        }
+        function subscribe(run, invalidate = noop) {
+            const subscriber = [run, invalidate];
+            subscribers.add(subscriber);
+            if (subscribers.size === 1) {
+                stop = start(set) || noop;
+            }
+            run(value);
+            return () => {
+                subscribers.delete(subscriber);
+                if (subscribers.size === 0) {
+                    stop();
+                    stop = null;
+                }
+            };
+        }
+        return { set, update, subscribe };
+    }
+
+    // Unique ID creation requires a high quality random # generator. In the browser we therefore
+    // require the crypto API and do not support built-in fallback to lower quality random number
+    // generators (like Math.random()).
+    var getRandomValues;
+    var rnds8 = new Uint8Array(16);
+    function rng() {
+      // lazy load so that environments that need to polyfill have a chance to do so
+      if (!getRandomValues) {
+        // getRandomValues needs to be invoked in a context where "this" is a Crypto implementation. Also,
+        // find the complete implementation of crypto (msCrypto) on IE11.
+        getRandomValues = typeof crypto !== 'undefined' && crypto.getRandomValues && crypto.getRandomValues.bind(crypto) || typeof msCrypto !== 'undefined' && typeof msCrypto.getRandomValues === 'function' && msCrypto.getRandomValues.bind(msCrypto);
+
+        if (!getRandomValues) {
+          throw new Error('crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported');
+        }
+      }
+
+      return getRandomValues(rnds8);
+    }
+
+    var REGEX = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i;
+
+    function validate(uuid) {
+      return typeof uuid === 'string' && REGEX.test(uuid);
+    }
+
+    /**
+     * Convert array of 16 byte values to UUID string format of the form:
+     * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+     */
+
+    var byteToHex = [];
+
+    for (var i = 0; i < 256; ++i) {
+      byteToHex.push((i + 0x100).toString(16).substr(1));
+    }
+
+    function stringify(arr) {
+      var offset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+      // Note: Be careful editing this code!  It's been tuned for performance
+      // and works in ways you may not expect. See https://github.com/uuidjs/uuid/pull/434
+      var uuid = (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + '-' + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + '-' + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + '-' + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + '-' + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase(); // Consistency check for valid UUID.  If this throws, it's likely due to one
+      // of the following:
+      // - One or more input array values don't map to a hex octet (leading to
+      // "undefined" in the uuid)
+      // - Invalid input values for the RFC `version` or `variant` fields
+
+      if (!validate(uuid)) {
+        throw TypeError('Stringified UUID is invalid');
+      }
+
+      return uuid;
+    }
+
+    function v4(options, buf, offset) {
+      options = options || {};
+      var rnds = options.random || (options.rng || rng)(); // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
+
+      rnds[6] = rnds[6] & 0x0f | 0x40;
+      rnds[8] = rnds[8] & 0x3f | 0x80; // Copy bytes to buffer, if provided
+
+      if (buf) {
+        offset = offset || 0;
+
+        for (var i = 0; i < 16; ++i) {
+          buf[offset + i] = rnds[i];
+        }
+
+        return buf;
+      }
+
+      return stringify(rnds);
+    }
+
+    const meetups = writable([
+        {
+            id: v4(),
+            title: 'Coding Bootcamp',
+            subtitle: 'Learn to code',
+            description: 'In this meetup we will learn to code',
+            imageUrl:
+                'https://akm-img-a-in.tosshub.com/indiatoday/images/story/202012/chris-ried-ieic5Tq8YMk-unsplas_1200x768.jpeg?bEhcYQAShJnLf0Mtu4JYq8YzICfhz2rB&size=770:433',
+            address: '24th Nerd Road, 100 Tórshavn',
+            contactEmail: 'learntocode@test.com',
+            isFavorite: false,
+        },
+        {
+            id: v4(),
+            title: 'Drink beer',
+            subtitle: 'Friends',
+            description: 'In this meetup we will drink beer',
+            imageUrl: 'https://picsum.photos/id/237/200/300',
+            address: '245th Nerd Road, 900 Vágur',
+            contactEmail: 'beer@test.com',
+            isFavorite: false,
+        },
+    ]);
+
+    const customMeetupsStore = {
+        subscribe: meetups.subscribe,
+        addMeetup: meetupData => {
+            const newMeetup = {
+                ...meetupData,
+                id: v4(),
+                isFavorite: false,
+            };
+
+            meetups.update(items => {
+                return [newMeetup, ...items];
+            });
+        },
+        updateMeetup: (id, meetupData) => {
+            meetups.update(items => {
+                const meetupIndex = items.findIndex(i => i.id === id);
+                const updatedMeetup = {...items[meetupIndex], ...meetupData};
+                const updatedMeetups = [...items];
+                updatedMeetups[meetupIndex] = updatedMeetup;
+                return updatedMeetups;
+            });
+        },
+        toggleFavorite: id => {
+            meetups.update(items => {
+                const updatedMeetup = {...items.find(m => m.id === id)};
+                updatedMeetup.isFavorite = !updatedMeetup.isFavorite;
+                const meetupIndex = items.findIndex(m => m.id === id);
+                const updatedMeetups = [...items];
+                updatedMeetups[meetupIndex] = updatedMeetup;
+                return updatedMeetups;
+            });
+        },
+        removeMeetup: id => {
+            meetups.update(items => {
+                return items.filter(item => item.id !== id);
+            });
+        }
+    };
+
     /* src/UI/Button.svelte generated by Svelte v3.46.3 */
 
     const file$9 = "src/UI/Button.svelte";
@@ -615,7 +800,7 @@ var app = (function () {
     			attr_dev(button, "class", button_class_value = "" + (/*mode*/ ctx[2] + " " + /*color*/ ctx[3] + " svelte-g32zaw"));
     			attr_dev(button, "type", /*type*/ ctx[0]);
     			button.disabled = /*disabled*/ ctx[4];
-    			add_location(button, file$9, 13, 2, 214);
+    			add_location(button, file$9, 13, 2, 227);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, button, anchor);
@@ -700,7 +885,7 @@ var app = (function () {
     			if (default_slot) default_slot.c();
     			attr_dev(a, "href", /*href*/ ctx[1]);
     			attr_dev(a, "class", "svelte-g32zaw");
-    			add_location(a, file$9, 9, 2, 173);
+    			add_location(a, file$9, 9, 2, 182);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, a, anchor);
@@ -944,191 +1129,6 @@ var app = (function () {
     	}
     }
 
-    const subscriber_queue = [];
-    /**
-     * Create a `Writable` store that allows both updating and reading by subscription.
-     * @param {*=}value initial value
-     * @param {StartStopNotifier=}start start and stop notifications for subscriptions
-     */
-    function writable(value, start = noop) {
-        let stop;
-        const subscribers = new Set();
-        function set(new_value) {
-            if (safe_not_equal(value, new_value)) {
-                value = new_value;
-                if (stop) { // store is ready
-                    const run_queue = !subscriber_queue.length;
-                    for (const subscriber of subscribers) {
-                        subscriber[1]();
-                        subscriber_queue.push(subscriber, value);
-                    }
-                    if (run_queue) {
-                        for (let i = 0; i < subscriber_queue.length; i += 2) {
-                            subscriber_queue[i][0](subscriber_queue[i + 1]);
-                        }
-                        subscriber_queue.length = 0;
-                    }
-                }
-            }
-        }
-        function update(fn) {
-            set(fn(value));
-        }
-        function subscribe(run, invalidate = noop) {
-            const subscriber = [run, invalidate];
-            subscribers.add(subscriber);
-            if (subscribers.size === 1) {
-                stop = start(set) || noop;
-            }
-            run(value);
-            return () => {
-                subscribers.delete(subscriber);
-                if (subscribers.size === 0) {
-                    stop();
-                    stop = null;
-                }
-            };
-        }
-        return { set, update, subscribe };
-    }
-
-    // Unique ID creation requires a high quality random # generator. In the browser we therefore
-    // require the crypto API and do not support built-in fallback to lower quality random number
-    // generators (like Math.random()).
-    var getRandomValues;
-    var rnds8 = new Uint8Array(16);
-    function rng() {
-      // lazy load so that environments that need to polyfill have a chance to do so
-      if (!getRandomValues) {
-        // getRandomValues needs to be invoked in a context where "this" is a Crypto implementation. Also,
-        // find the complete implementation of crypto (msCrypto) on IE11.
-        getRandomValues = typeof crypto !== 'undefined' && crypto.getRandomValues && crypto.getRandomValues.bind(crypto) || typeof msCrypto !== 'undefined' && typeof msCrypto.getRandomValues === 'function' && msCrypto.getRandomValues.bind(msCrypto);
-
-        if (!getRandomValues) {
-          throw new Error('crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported');
-        }
-      }
-
-      return getRandomValues(rnds8);
-    }
-
-    var REGEX = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i;
-
-    function validate(uuid) {
-      return typeof uuid === 'string' && REGEX.test(uuid);
-    }
-
-    /**
-     * Convert array of 16 byte values to UUID string format of the form:
-     * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
-     */
-
-    var byteToHex = [];
-
-    for (var i = 0; i < 256; ++i) {
-      byteToHex.push((i + 0x100).toString(16).substr(1));
-    }
-
-    function stringify(arr) {
-      var offset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-      // Note: Be careful editing this code!  It's been tuned for performance
-      // and works in ways you may not expect. See https://github.com/uuidjs/uuid/pull/434
-      var uuid = (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + '-' + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + '-' + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + '-' + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + '-' + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase(); // Consistency check for valid UUID.  If this throws, it's likely due to one
-      // of the following:
-      // - One or more input array values don't map to a hex octet (leading to
-      // "undefined" in the uuid)
-      // - Invalid input values for the RFC `version` or `variant` fields
-
-      if (!validate(uuid)) {
-        throw TypeError('Stringified UUID is invalid');
-      }
-
-      return uuid;
-    }
-
-    function v4(options, buf, offset) {
-      options = options || {};
-      var rnds = options.random || (options.rng || rng)(); // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
-
-      rnds[6] = rnds[6] & 0x0f | 0x40;
-      rnds[8] = rnds[8] & 0x3f | 0x80; // Copy bytes to buffer, if provided
-
-      if (buf) {
-        offset = offset || 0;
-
-        for (var i = 0; i < 16; ++i) {
-          buf[offset + i] = rnds[i];
-        }
-
-        return buf;
-      }
-
-      return stringify(rnds);
-    }
-
-    const meetups = writable([
-        {
-            id: v4(),
-            title: 'Coding Bootcamp',
-            subtitle: 'Learn to code',
-            description: 'In this meetup we will learn to code',
-            imageUrl:
-                'https://akm-img-a-in.tosshub.com/indiatoday/images/story/202012/chris-ried-ieic5Tq8YMk-unsplas_1200x768.jpeg?bEhcYQAShJnLf0Mtu4JYq8YzICfhz2rB&size=770:433',
-            address: '24th Nerd Road, 100 Tórshavn',
-            contactEmail: 'learntocode@test.com',
-            isFavorite: false,
-        },
-        {
-            id: v4(),
-            title: 'Drink beer',
-            subtitle: 'Friends',
-            description: 'In this meetup we will drink beer',
-            imageUrl: 'https://picsum.photos/id/237/200/300',
-            address: '245th Nerd Road, 900 Vágur',
-            contactEmail: 'beer@test.com',
-            isFavorite: false,
-        },
-    ]);
-
-    const customMeetupsStore = {
-        subscribe: meetups.subscribe,
-        addMeetup: meetupData => {
-            const newMeetup = {
-                ...meetupData,
-                id: v4(),
-                isFavorite: false,
-            };
-
-            meetups.update(items => {
-                return [newMeetup, ...items];
-            });
-        },
-        updateMeetup: (id, meetupData) => {
-            meetups.update(items => {
-                const meetupIndex = items.findIndex(i => i.id === id);
-                const updatedMeetup = {...items[meetupIndex], ...meetupData};
-                const updatedMeetups = [...items];
-                updatedMeetups[meetupIndex] = updatedMeetup;
-                return updatedMeetups;
-            });
-        },
-        toggleFavorite: id => {
-            meetups.update(items => {
-                const updatedMeetup = {...items.find(m => m.id === id)};
-                updatedMeetup.isFavorite = !updatedMeetup.isFavorite;
-                const meetupIndex = items.findIndex(m => m.id === id);
-                const updatedMeetups = [...items];
-                updatedMeetups[meetupIndex] = updatedMeetup;
-                return updatedMeetups;
-            });
-        },
-        removeMeetup: id => {
-            meetups.update(items => {
-                return items.filter(item => item.id !== id);
-            });
-        }
-    };
-
     /* src/UI/Badge.svelte generated by Svelte v3.46.3 */
 
     const file$8 = "src/UI/Badge.svelte";
@@ -1333,7 +1333,7 @@ var app = (function () {
     	return block;
     }
 
-    // (43:8) <Button mode="outline" color={isFav ? null : 'success'} type="button" on:click={togglefavorite}         >
+    // (43:8) <Button mode="outline" color={isFav ? null : 'success'} type="button" on:click={togglefavorite}          >
     function create_default_slot_1$2(ctx) {
     	let t_value = (/*isFav*/ ctx[6] ? 'Unfavorite' : 'Favorite') + "";
     	let t;
@@ -1357,7 +1357,7 @@ var app = (function () {
     		block,
     		id: create_default_slot_1$2.name,
     		type: "slot",
-    		source: "(43:8) <Button mode=\\\"outline\\\" color={isFav ? null : 'success'} type=\\\"button\\\" on:click={togglefavorite}         >",
+    		source: "(43:8) <Button mode=\\\"outline\\\" color={isFav ? null : 'success'} type=\\\"button\\\" on:click={togglefavorite}          >",
     		ctx
     	});
 
@@ -1486,27 +1486,27 @@ var app = (function () {
     			t11 = space();
     			create_component(button2.$$.fragment);
     			attr_dev(h1, "class", "svelte-u406il");
-    			add_location(h1, file$7, 25, 8, 547);
+    			add_location(h1, file$7, 25, 8, 572);
     			attr_dev(h2, "class", "svelte-u406il");
-    			add_location(h2, file$7, 31, 8, 676);
+    			add_location(h2, file$7, 31, 8, 707);
     			attr_dev(p0, "class", "svelte-u406il");
-    			add_location(p0, file$7, 32, 8, 704);
+    			add_location(p0, file$7, 32, 8, 736);
     			attr_dev(header, "class", "svelte-u406il");
-    			add_location(header, file$7, 24, 4, 530);
+    			add_location(header, file$7, 24, 4, 554);
     			if (!src_url_equal(img.src, img_src_value = /*imageUrl*/ ctx[3])) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", /*title*/ ctx[1]);
     			attr_dev(img, "class", "svelte-u406il");
-    			add_location(img, file$7, 35, 8, 767);
+    			add_location(img, file$7, 35, 8, 802);
     			attr_dev(div0, "class", "image svelte-u406il");
-    			add_location(div0, file$7, 34, 4, 739);
+    			add_location(div0, file$7, 34, 4, 773);
     			attr_dev(p1, "class", "svelte-u406il");
-    			add_location(p1, file$7, 38, 8, 847);
+    			add_location(p1, file$7, 38, 8, 885);
     			attr_dev(div1, "class", "content svelte-u406il");
-    			add_location(div1, file$7, 37, 4, 817);
+    			add_location(div1, file$7, 37, 4, 854);
     			attr_dev(footer, "class", "svelte-u406il");
-    			add_location(footer, file$7, 40, 4, 883);
+    			add_location(footer, file$7, 40, 4, 923);
     			attr_dev(article, "class", "svelte-u406il");
-    			add_location(article, file$7, 23, 0, 516);
+    			add_location(article, file$7, 23, 0, 539);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1873,13 +1873,13 @@ var app = (function () {
     			attr_dev(button0, "type", "button");
     			attr_dev(button0, "class", "svelte-19iybay");
     			toggle_class(button0, "active", /*selectedButton*/ ctx[0] === 0);
-    			add_location(button0, file$6, 9, 4, 158);
+    			add_location(button0, file$6, 9, 4, 167);
     			attr_dev(button1, "type", "button");
     			attr_dev(button1, "class", "svelte-19iybay");
     			toggle_class(button1, "active", /*selectedButton*/ ctx[0] === 1);
-    			add_location(button1, file$6, 14, 4, 322);
+    			add_location(button1, file$6, 14, 4, 336);
     			attr_dev(div, "class", "svelte-19iybay");
-    			add_location(div, file$6, 8, 0, 148);
+    			add_location(div, file$6, 8, 0, 156);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1985,31 +1985,58 @@ var app = (function () {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[6] = list[i];
+    	child_ctx[8] = list[i];
     	return child_ctx;
     }
 
-    // (19:4) {#each filteredMeetups as meetup}
+    // (20:4) <Button on:click={() => dispatch('add')}>
+    function create_default_slot$3(ctx) {
+    	let t;
+
+    	const block = {
+    		c: function create() {
+    			t = text("New Meetup");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t, anchor);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_default_slot$3.name,
+    		type: "slot",
+    		source: "(20:4) <Button on:click={() => dispatch('add')}>",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (24:4) {#each filteredMeetups as meetup}
     function create_each_block(ctx) {
     	let meetupitem;
     	let current;
 
     	meetupitem = new MeetupItem({
     			props: {
-    				id: /*meetup*/ ctx[6].id,
-    				title: /*meetup*/ ctx[6].title,
-    				subtitle: /*meetup*/ ctx[6].subtitle,
-    				description: /*meetup*/ ctx[6].description,
-    				imageUrl: /*meetup*/ ctx[6].imageUrl,
-    				address: /*meetup*/ ctx[6].address,
-    				email: /*meetup*/ ctx[6].contactEmail,
-    				isFav: /*meetup*/ ctx[6].isFavorite
+    				id: /*meetup*/ ctx[8].id,
+    				title: /*meetup*/ ctx[8].title,
+    				subtitle: /*meetup*/ ctx[8].subtitle,
+    				description: /*meetup*/ ctx[8].description,
+    				imageUrl: /*meetup*/ ctx[8].imageUrl,
+    				address: /*meetup*/ ctx[8].address,
+    				email: /*meetup*/ ctx[8].contactEmail,
+    				isFav: /*meetup*/ ctx[8].isFavorite
     			},
     			$$inline: true
     		});
 
-    	meetupitem.$on("showdetails", /*showdetails_handler*/ ctx[4]);
-    	meetupitem.$on("edit", /*edit_handler*/ ctx[5]);
+    	meetupitem.$on("showdetails", /*showdetails_handler*/ ctx[6]);
+    	meetupitem.$on("edit", /*edit_handler*/ ctx[7]);
 
     	const block = {
     		c: function create() {
@@ -2021,14 +2048,14 @@ var app = (function () {
     		},
     		p: function update(ctx, dirty) {
     			const meetupitem_changes = {};
-    			if (dirty & /*filteredMeetups*/ 1) meetupitem_changes.id = /*meetup*/ ctx[6].id;
-    			if (dirty & /*filteredMeetups*/ 1) meetupitem_changes.title = /*meetup*/ ctx[6].title;
-    			if (dirty & /*filteredMeetups*/ 1) meetupitem_changes.subtitle = /*meetup*/ ctx[6].subtitle;
-    			if (dirty & /*filteredMeetups*/ 1) meetupitem_changes.description = /*meetup*/ ctx[6].description;
-    			if (dirty & /*filteredMeetups*/ 1) meetupitem_changes.imageUrl = /*meetup*/ ctx[6].imageUrl;
-    			if (dirty & /*filteredMeetups*/ 1) meetupitem_changes.address = /*meetup*/ ctx[6].address;
-    			if (dirty & /*filteredMeetups*/ 1) meetupitem_changes.email = /*meetup*/ ctx[6].contactEmail;
-    			if (dirty & /*filteredMeetups*/ 1) meetupitem_changes.isFav = /*meetup*/ ctx[6].isFavorite;
+    			if (dirty & /*filteredMeetups*/ 1) meetupitem_changes.id = /*meetup*/ ctx[8].id;
+    			if (dirty & /*filteredMeetups*/ 1) meetupitem_changes.title = /*meetup*/ ctx[8].title;
+    			if (dirty & /*filteredMeetups*/ 1) meetupitem_changes.subtitle = /*meetup*/ ctx[8].subtitle;
+    			if (dirty & /*filteredMeetups*/ 1) meetupitem_changes.description = /*meetup*/ ctx[8].description;
+    			if (dirty & /*filteredMeetups*/ 1) meetupitem_changes.imageUrl = /*meetup*/ ctx[8].imageUrl;
+    			if (dirty & /*filteredMeetups*/ 1) meetupitem_changes.address = /*meetup*/ ctx[8].address;
+    			if (dirty & /*filteredMeetups*/ 1) meetupitem_changes.email = /*meetup*/ ctx[8].contactEmail;
+    			if (dirty & /*filteredMeetups*/ 1) meetupitem_changes.isFav = /*meetup*/ ctx[8].isFavorite;
     			meetupitem.$set(meetupitem_changes);
     		},
     		i: function intro(local) {
@@ -2049,7 +2076,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(19:4) {#each filteredMeetups as meetup}",
+    		source: "(24:4) {#each filteredMeetups as meetup}",
     		ctx
     	});
 
@@ -2059,11 +2086,23 @@ var app = (function () {
     function create_fragment$5(ctx) {
     	let section0;
     	let meetupfilter;
-    	let t;
+    	let t0;
+    	let button;
+    	let t1;
     	let section1;
     	let current;
     	meetupfilter = new MeetupFilter({ $$inline: true });
-    	meetupfilter.$on("select", /*setFilter*/ ctx[1]);
+    	meetupfilter.$on("select", /*setFilter*/ ctx[2]);
+
+    	button = new Button({
+    			props: {
+    				$$slots: { default: [create_default_slot$3] },
+    				$$scope: { ctx }
+    			},
+    			$$inline: true
+    		});
+
+    	button.$on("click", /*click_handler*/ ctx[5]);
     	let each_value = /*filteredMeetups*/ ctx[0];
     	validate_each_argument(each_value);
     	let each_blocks = [];
@@ -2080,7 +2119,9 @@ var app = (function () {
     		c: function create() {
     			section0 = element("section");
     			create_component(meetupfilter.$$.fragment);
-    			t = space();
+    			t0 = space();
+    			create_component(button.$$.fragment);
+    			t1 = space();
     			section1 = element("section");
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
@@ -2088,11 +2129,11 @@ var app = (function () {
     			}
 
     			attr_dev(section0, "id", "meetup-controls");
-    			attr_dev(section0, "class", "svelte-1a4s8p7");
-    			add_location(section0, file$5, 13, 0, 338);
+    			attr_dev(section0, "class", "svelte-xccrat");
+    			add_location(section0, file$5, 17, 0, 500);
     			attr_dev(section1, "id", "meetups");
-    			attr_dev(section1, "class", "svelte-1a4s8p7");
-    			add_location(section1, file$5, 16, 0, 423);
+    			attr_dev(section1, "class", "svelte-xccrat");
+    			add_location(section1, file$5, 21, 0, 654);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -2100,7 +2141,9 @@ var app = (function () {
     		m: function mount(target, anchor) {
     			insert_dev(target, section0, anchor);
     			mount_component(meetupfilter, section0, null);
-    			insert_dev(target, t, anchor);
+    			append_dev(section0, t0);
+    			mount_component(button, section0, null);
+    			insert_dev(target, t1, anchor);
     			insert_dev(target, section1, anchor);
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
@@ -2110,6 +2153,14 @@ var app = (function () {
     			current = true;
     		},
     		p: function update(ctx, [dirty]) {
+    			const button_changes = {};
+
+    			if (dirty & /*$$scope*/ 2048) {
+    				button_changes.$$scope = { dirty, ctx };
+    			}
+
+    			button.$set(button_changes);
+
     			if (dirty & /*filteredMeetups*/ 1) {
     				each_value = /*filteredMeetups*/ ctx[0];
     				validate_each_argument(each_value);
@@ -2141,6 +2192,7 @@ var app = (function () {
     		i: function intro(local) {
     			if (current) return;
     			transition_in(meetupfilter.$$.fragment, local);
+    			transition_in(button.$$.fragment, local);
 
     			for (let i = 0; i < each_value.length; i += 1) {
     				transition_in(each_blocks[i]);
@@ -2150,6 +2202,7 @@ var app = (function () {
     		},
     		o: function outro(local) {
     			transition_out(meetupfilter.$$.fragment, local);
+    			transition_out(button.$$.fragment, local);
     			each_blocks = each_blocks.filter(Boolean);
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
@@ -2161,7 +2214,8 @@ var app = (function () {
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(section0);
     			destroy_component(meetupfilter);
-    			if (detaching) detach_dev(t);
+    			destroy_component(button);
+    			if (detaching) detach_dev(t1);
     			if (detaching) detach_dev(section1);
     			destroy_each(each_blocks, detaching);
     		}
@@ -2183,10 +2237,11 @@ var app = (function () {
     	let { $$slots: slots = {}, $$scope } = $$props;
     	validate_slots('MeetupGrid', slots, []);
     	let { meetups } = $$props;
+    	const dispatch = createEventDispatcher();
     	let favsOnly = false;
 
     	const setFilter = event => {
-    		$$invalidate(3, favsOnly = event.detail === 1);
+    		$$invalidate(4, favsOnly = event.detail === 1);
     	};
 
     	const writable_props = ['meetups'];
@@ -2194,6 +2249,8 @@ var app = (function () {
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<MeetupGrid> was created with unknown prop '${key}'`);
     	});
+
+    	const click_handler = () => dispatch('add');
 
     	function showdetails_handler(event) {
     		bubble.call(this, $$self, event);
@@ -2204,21 +2261,24 @@ var app = (function () {
     	}
 
     	$$self.$$set = $$props => {
-    		if ('meetups' in $$props) $$invalidate(2, meetups = $$props.meetups);
+    		if ('meetups' in $$props) $$invalidate(3, meetups = $$props.meetups);
     	};
 
     	$$self.$capture_state = () => ({
+    		createEventDispatcher,
     		MeetupItem,
     		MeetupFilter,
+    		Button,
     		meetups,
+    		dispatch,
     		favsOnly,
     		setFilter,
     		filteredMeetups
     	});
 
     	$$self.$inject_state = $$props => {
-    		if ('meetups' in $$props) $$invalidate(2, meetups = $$props.meetups);
-    		if ('favsOnly' in $$props) $$invalidate(3, favsOnly = $$props.favsOnly);
+    		if ('meetups' in $$props) $$invalidate(3, meetups = $$props.meetups);
+    		if ('favsOnly' in $$props) $$invalidate(4, favsOnly = $$props.favsOnly);
     		if ('filteredMeetups' in $$props) $$invalidate(0, filteredMeetups = $$props.filteredMeetups);
     	};
 
@@ -2227,16 +2287,18 @@ var app = (function () {
     	}
 
     	$$self.$$.update = () => {
-    		if ($$self.$$.dirty & /*favsOnly, meetups*/ 12) {
+    		if ($$self.$$.dirty & /*favsOnly, meetups*/ 24) {
     			$$invalidate(0, filteredMeetups = favsOnly ? meetups.filter(m => m.isFavorite) : meetups);
     		}
     	};
 
     	return [
     		filteredMeetups,
+    		dispatch,
     		setFilter,
     		meetups,
     		favsOnly,
+    		click_handler,
     		showdetails_handler,
     		edit_handler
     	];
@@ -2245,7 +2307,7 @@ var app = (function () {
     class MeetupGrid extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance$5, create_fragment$5, safe_not_equal, { meetups: 2 });
+    		init(this, options, instance$5, create_fragment$5, safe_not_equal, { meetups: 3 });
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
@@ -2257,7 +2319,7 @@ var app = (function () {
     		const { ctx } = this.$$;
     		const props = options.props || {};
 
-    		if (/*meetups*/ ctx[2] === undefined && !('meetups' in props)) {
+    		if (/*meetups*/ ctx[3] === undefined && !('meetups' in props)) {
     			console.warn("<MeetupGrid> was created without expected prop 'meetups'");
     		}
     	}
@@ -2275,7 +2337,7 @@ var app = (function () {
 
     const file$4 = "src/UI/TextInput.svelte";
 
-    // (25:2) {:else}
+    // (24:4) {:else}
     function create_else_block$1(ctx) {
     	let input;
     	let mounted;
@@ -2287,9 +2349,9 @@ var app = (function () {
     			attr_dev(input, "type", /*type*/ ctx[5]);
     			attr_dev(input, "id", /*id*/ ctx[1]);
     			input.value = /*value*/ ctx[4];
-    			attr_dev(input, "class", "svelte-1mrfx4j");
+    			attr_dev(input, "class", "svelte-1k3e3xv");
     			toggle_class(input, "invalid", !/*valid*/ ctx[6] && /*touched*/ ctx[8]);
-    			add_location(input, file$4, 25, 4, 513);
+    			add_location(input, file$4, 24, 8, 606);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, input, anchor);
@@ -2331,14 +2393,14 @@ var app = (function () {
     		block,
     		id: create_else_block$1.name,
     		type: "else",
-    		source: "(25:2) {:else}",
+    		source: "(24:4) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (16:2) {#if controlType === 'textarea'}
+    // (16:4) {#if controlType === 'textarea'}
     function create_if_block_1$1(ctx) {
     	let textarea;
     	let mounted;
@@ -2350,9 +2412,9 @@ var app = (function () {
     			attr_dev(textarea, "rows", /*rows*/ ctx[3]);
     			attr_dev(textarea, "id", /*id*/ ctx[1]);
     			textarea.value = /*value*/ ctx[4];
-    			attr_dev(textarea, "class", "svelte-1mrfx4j");
+    			attr_dev(textarea, "class", "svelte-1k3e3xv");
     			toggle_class(textarea, "invalid", !/*valid*/ ctx[6] && /*touched*/ ctx[8]);
-    			add_location(textarea, file$4, 16, 4, 350);
+    			add_location(textarea, file$4, 16, 4, 388);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, textarea, anchor);
@@ -2394,14 +2456,14 @@ var app = (function () {
     		block,
     		id: create_if_block_1$1.name,
     		type: "if",
-    		source: "(16:2) {#if controlType === 'textarea'}",
+    		source: "(16:4) {#if controlType === 'textarea'}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (35:2) {#if validityMessage && !valid && touched}
+    // (34:4) {#if validityMessage && !valid && touched}
     function create_if_block$2(ctx) {
     	let p;
     	let t;
@@ -2410,8 +2472,8 @@ var app = (function () {
     		c: function create() {
     			p = element("p");
     			t = text(/*validityMessage*/ ctx[7]);
-    			attr_dev(p, "class", "error-message svelte-1mrfx4j");
-    			add_location(p, file$4, 35, 4, 716);
+    			attr_dev(p, "class", "error-message svelte-1k3e3xv");
+    			add_location(p, file$4, 34, 8, 891);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -2429,7 +2491,7 @@ var app = (function () {
     		block,
     		id: create_if_block$2.name,
     		type: "if",
-    		source: "(35:2) {#if validityMessage && !valid && touched}",
+    		source: "(34:4) {#if validityMessage && !valid && touched}",
     		ctx
     	});
 
@@ -2462,10 +2524,10 @@ var app = (function () {
     			t2 = space();
     			if (if_block1) if_block1.c();
     			attr_dev(label_1, "for", /*id*/ ctx[1]);
-    			attr_dev(label_1, "class", "svelte-1mrfx4j");
-    			add_location(label_1, file$4, 14, 2, 279);
-    			attr_dev(div, "class", "form-control svelte-1mrfx4j");
-    			add_location(div, file$4, 13, 0, 250);
+    			attr_dev(label_1, "class", "svelte-1k3e3xv");
+    			add_location(label_1, file$4, 14, 4, 313);
+    			attr_dev(div, "class", "form-control svelte-1k3e3xv");
+    			add_location(div, file$4, 13, 0, 281);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -2735,7 +2797,7 @@ var app = (function () {
     const get_footer_slot_context = ctx => ({});
 
     // (22:6) <Button on:click={closeModal}>
-    function create_default_slot$3(ctx) {
+    function create_default_slot$2(ctx) {
     	let t;
 
     	const block = {
@@ -2752,7 +2814,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot$3.name,
+    		id: create_default_slot$2.name,
     		type: "slot",
     		source: "(22:6) <Button on:click={closeModal}>",
     		ctx
@@ -2761,14 +2823,14 @@ var app = (function () {
     	return block;
     }
 
-    // (21:24)        
+    // (21:24)         
     function fallback_block(ctx) {
     	let button;
     	let current;
 
     	button = new Button({
     			props: {
-    				$$slots: { default: [create_default_slot$3] },
+    				$$slots: { default: [create_default_slot$2] },
     				$$scope: { ctx }
     			},
     			$$inline: true
@@ -2811,7 +2873,7 @@ var app = (function () {
     		block,
     		id: fallback_block.name,
     		type: "fallback",
-    		source: "(21:24)        ",
+    		source: "(21:24)         ",
     		ctx
     	});
 
@@ -2851,15 +2913,15 @@ var app = (function () {
     			footer = element("footer");
     			if (footer_slot_or_fallback) footer_slot_or_fallback.c();
     			attr_dev(div0, "class", "modal-backdrop svelte-rj5ywu");
-    			add_location(div0, file$3, 13, 0, 231);
+    			add_location(div0, file$3, 13, 0, 244);
     			attr_dev(h1, "class", "svelte-rj5ywu");
-    			add_location(h1, file$3, 15, 2, 306);
+    			add_location(h1, file$3, 15, 2, 321);
     			attr_dev(div1, "class", "content svelte-rj5ywu");
-    			add_location(div1, file$3, 16, 2, 325);
+    			add_location(div1, file$3, 16, 2, 341);
     			attr_dev(footer, "class", "svelte-rj5ywu");
-    			add_location(footer, file$3, 19, 2, 371);
+    			add_location(footer, file$3, 19, 2, 390);
     			attr_dev(div2, "class", "modal svelte-rj5ywu");
-    			add_location(div2, file$3, 14, 0, 284);
+    			add_location(div2, file$3, 14, 0, 298);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -3034,7 +3096,7 @@ var app = (function () {
     // Check if email is valid
     function isValidEmail(val) {
       return new RegExp(
-        "[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
+        '[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&\'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?'
       ).test(val);
     }
 
@@ -3154,7 +3216,7 @@ var app = (function () {
     			t4 = space();
     			create_component(textinput5.$$.fragment);
     			attr_dev(form, "class", "svelte-xg754s");
-    			add_location(form, file$2, 72, 4, 1983);
+    			add_location(form, file$2, 72, 4, 2055);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, form, anchor);
@@ -3307,7 +3369,7 @@ var app = (function () {
     	button = new Button({
     			props: {
     				type: "button",
-    				$$slots: { default: [create_default_slot$2] },
+    				$$slots: { default: [create_default_slot$1] },
     				$$scope: { ctx }
     			},
     			$$inline: true
@@ -3358,7 +3420,7 @@ var app = (function () {
     }
 
     // (129:12) <Button type="button" on:click={removeMeetup}>
-    function create_default_slot$2(ctx) {
+    function create_default_slot$1(ctx) {
     	let t;
 
     	const block = {
@@ -3375,7 +3437,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot$2.name,
+    		id: create_default_slot$1.name,
     		type: "slot",
     		source: "(129:12) <Button type=\\\"button\\\" on:click={removeMeetup}>",
     		ctx
@@ -3427,7 +3489,7 @@ var app = (function () {
     			t1 = space();
     			if (if_block) if_block.c();
     			attr_dev(div, "slot", "footer");
-    			add_location(div, file$2, 124, 4, 3866);
+    			add_location(div, file$2, 124, 4, 3990);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -3816,7 +3878,7 @@ var app = (function () {
     }
 
     // (30:4) <Button type="button" mode="outline" on:click={() => dispatch('close')}>
-    function create_default_slot$1(ctx) {
+    function create_default_slot(ctx) {
     	let t;
 
     	const block = {
@@ -3833,7 +3895,7 @@ var app = (function () {
 
     	dispatch_dev("SvelteRegisterBlock", {
     		block,
-    		id: create_default_slot$1.name,
+    		id: create_default_slot.name,
     		type: "slot",
     		source: "(30:4) <Button type=\\\"button\\\" mode=\\\"outline\\\" on:click={() => dispatch('close')}>",
     		ctx
@@ -3883,7 +3945,7 @@ var app = (function () {
     			props: {
     				type: "button",
     				mode: "outline",
-    				$$slots: { default: [create_default_slot$1] },
+    				$$slots: { default: [create_default_slot] },
     				$$scope: { ctx }
     			},
     			$$inline: true
@@ -3915,19 +3977,19 @@ var app = (function () {
     			if (!src_url_equal(img.src, img_src_value = /*selectedMeetup*/ ctx[0].imageUrl)) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", img_alt_value = /*selectedMeetup*/ ctx[0].title);
     			attr_dev(img, "class", "svelte-8ez2ph");
-    			add_location(img, file$1, 22, 4, 443);
+    			add_location(img, file$1, 22, 4, 465);
     			attr_dev(div0, "class", "image svelte-8ez2ph");
-    			add_location(div0, file$1, 21, 2, 419);
+    			add_location(div0, file$1, 21, 2, 440);
     			attr_dev(h1, "class", "svelte-8ez2ph");
-    			add_location(h1, file$1, 25, 4, 545);
+    			add_location(h1, file$1, 25, 4, 570);
     			attr_dev(h2, "class", "svelte-8ez2ph");
-    			add_location(h2, file$1, 26, 4, 581);
+    			add_location(h2, file$1, 26, 4, 607);
     			attr_dev(p, "class", "svelte-8ez2ph");
-    			add_location(p, file$1, 27, 4, 647);
+    			add_location(p, file$1, 27, 4, 674);
     			attr_dev(div1, "class", "content svelte-8ez2ph");
-    			add_location(div1, file$1, 24, 2, 519);
+    			add_location(div1, file$1, 24, 2, 543);
     			attr_dev(section, "class", "svelte-8ez2ph");
-    			add_location(section, file$1, 20, 0, 407);
+    			add_location(section, file$1, 20, 0, 427);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -4095,7 +4157,7 @@ var app = (function () {
 
     const file = "src/App.svelte";
 
-    // (55:4) {:else}
+    // (52:4) {:else}
     function create_else_block(ctx) {
     	let meetupdetail;
     	let current;
@@ -4138,31 +4200,18 @@ var app = (function () {
     		block,
     		id: create_else_block.name,
     		type: "else",
-    		source: "(55:4) {:else}",
+    		source: "(52:4) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (47:4) {#if page === 'overview'}
+    // (46:4) {#if page === 'overview'}
     function create_if_block(ctx) {
-    	let div;
-    	let button;
-    	let t0;
-    	let t1;
+    	let t;
     	let meetupgrid;
     	let current;
-
-    	button = new Button({
-    			props: {
-    				$$slots: { default: [create_default_slot] },
-    				$$scope: { ctx }
-    			},
-    			$$inline: true
-    		});
-
-    	button.$on("click", /*click_handler*/ ctx[10]);
     	let if_block = /*editMode*/ ctx[0] === 'edit' && create_if_block_1(ctx);
 
     	meetupgrid = new MeetupGrid({
@@ -4172,36 +4221,21 @@ var app = (function () {
 
     	meetupgrid.$on("showdetails", /*showDetails*/ ctx[7]);
     	meetupgrid.$on("edit", /*startEdit*/ ctx[8]);
+    	meetupgrid.$on("add", /*add_handler*/ ctx[10]);
 
     	const block = {
     		c: function create() {
-    			div = element("div");
-    			create_component(button.$$.fragment);
-    			t0 = space();
     			if (if_block) if_block.c();
-    			t1 = space();
+    			t = space();
     			create_component(meetupgrid.$$.fragment);
-    			attr_dev(div, "class", "meetup-controls svelte-hshykb");
-    			add_location(div, file, 47, 8, 1013);
     		},
     		m: function mount(target, anchor) {
-    			insert_dev(target, div, anchor);
-    			mount_component(button, div, null);
-    			insert_dev(target, t0, anchor);
     			if (if_block) if_block.m(target, anchor);
-    			insert_dev(target, t1, anchor);
+    			insert_dev(target, t, anchor);
     			mount_component(meetupgrid, target, anchor);
     			current = true;
     		},
     		p: function update(ctx, dirty) {
-    			const button_changes = {};
-
-    			if (dirty & /*$$scope*/ 2048) {
-    				button_changes.$$scope = { dirty, ctx };
-    			}
-
-    			button.$set(button_changes);
-
     			if (/*editMode*/ ctx[0] === 'edit') {
     				if (if_block) {
     					if_block.p(ctx, dirty);
@@ -4213,7 +4247,7 @@ var app = (function () {
     					if_block = create_if_block_1(ctx);
     					if_block.c();
     					transition_in(if_block, 1);
-    					if_block.m(t1.parentNode, t1);
+    					if_block.m(t.parentNode, t);
     				}
     			} else if (if_block) {
     				group_outros();
@@ -4231,23 +4265,18 @@ var app = (function () {
     		},
     		i: function intro(local) {
     			if (current) return;
-    			transition_in(button.$$.fragment, local);
     			transition_in(if_block);
     			transition_in(meetupgrid.$$.fragment, local);
     			current = true;
     		},
     		o: function outro(local) {
-    			transition_out(button.$$.fragment, local);
     			transition_out(if_block);
     			transition_out(meetupgrid.$$.fragment, local);
     			current = false;
     		},
     		d: function destroy(detaching) {
-    			if (detaching) detach_dev(div);
-    			destroy_component(button);
-    			if (detaching) detach_dev(t0);
     			if (if_block) if_block.d(detaching);
-    			if (detaching) detach_dev(t1);
+    			if (detaching) detach_dev(t);
     			destroy_component(meetupgrid, detaching);
     		}
     	};
@@ -4256,41 +4285,14 @@ var app = (function () {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(47:4) {#if page === 'overview'}",
+    		source: "(46:4) {#if page === 'overview'}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (49:12) <Button on:click={() => (editMode = 'edit')}>
-    function create_default_slot(ctx) {
-    	let t;
-
-    	const block = {
-    		c: function create() {
-    			t = text("New Meetup");
-    		},
-    		m: function mount(target, anchor) {
-    			insert_dev(target, t, anchor);
-    		},
-    		d: function destroy(detaching) {
-    			if (detaching) detach_dev(t);
-    		}
-    	};
-
-    	dispatch_dev("SvelteRegisterBlock", {
-    		block,
-    		id: create_default_slot.name,
-    		type: "slot",
-    		source: "(49:12) <Button on:click={() => (editMode = 'edit')}>",
-    		ctx
-    	});
-
-    	return block;
-    }
-
-    // (51:8) {#if editMode === 'edit'}
+    // (47:8) {#if editMode === 'edit'}
     function create_if_block_1(ctx) {
     	let editmeetup;
     	let current;
@@ -4334,7 +4336,7 @@ var app = (function () {
     		block,
     		id: create_if_block_1.name,
     		type: "if",
-    		source: "(51:8) {#if editMode === 'edit'}",
+    		source: "(47:8) {#if editMode === 'edit'}",
     		ctx
     	});
 
@@ -4366,8 +4368,8 @@ var app = (function () {
     			t = space();
     			main = element("main");
     			if_block.c();
-    			attr_dev(main, "class", "svelte-hshykb");
-    			add_location(main, file, 45, 0, 968);
+    			attr_dev(main, "class", "svelte-r5b0o4");
+    			add_location(main, file, 44, 0, 967);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -4479,11 +4481,12 @@ var app = (function () {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<App> was created with unknown prop '${key}'`);
     	});
 
-    	const click_handler = () => $$invalidate(0, editMode = 'edit');
+    	const add_handler = () => {
+    		$$invalidate(0, editMode = 'edit');
+    	};
 
     	$$self.$capture_state = () => ({
     		Header,
-    		Button,
     		MeetupGrid,
     		EditMeetup,
     		MeetupDetail,
@@ -4522,7 +4525,7 @@ var app = (function () {
     		showDetails,
     		startEdit,
     		closeDetails,
-    		click_handler
+    		add_handler
     	];
     }
 

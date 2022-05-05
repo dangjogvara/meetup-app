@@ -1,6 +1,5 @@
 <script>
     import Header from './UI/Header.svelte';
-    import Button from './UI/Button.svelte';
     import MeetupGrid from './Meetups/MeetupGrid.svelte';
     import EditMeetup from './Meetups/EditMeetup.svelte';
     import MeetupDetail from './Meetups/MeetupDetail.svelte';
@@ -45,23 +44,17 @@
 
 <main>
     {#if page === 'overview'}
-        <div class="meetup-controls">
-            <Button on:click={() => (editMode = 'edit')}>New Meetup</Button>
-        </div>
         {#if editMode === 'edit'}
             <EditMeetup id={editedId} on:save={savedMeetup} on:cancel={cancelEdit} />
         {/if}
-        <MeetupGrid meetups={$meetups} on:showdetails={showDetails} on:edit={startEdit} />
+        <MeetupGrid meetups={$meetups} on:showdetails={showDetails} on:edit={startEdit}
+                    on:add={() => {editMode = 'edit'}} />
     {:else}
         <MeetupDetail id={pageData.id} on:close={closeDetails} />
     {/if}
 </main>
 
 <style>
-    .meetup-controls {
-        margin: 1rem;
-    }
-
     main {
         margin-top: 5rem;
     }
