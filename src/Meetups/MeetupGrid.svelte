@@ -22,7 +22,7 @@
 </section>
 <section id="meetups">
   <!-- render meetup items -->
-  {#each filteredMeetups as meetup}
+  {#each filteredMeetups as meetup (meetup.id)}
     <MeetupItem
       id={meetup.id}
       title={meetup.title}
