@@ -39,7 +39,6 @@
   }
 </script>
 
-<!-- header component -->
 <Header />
 
 <main>
