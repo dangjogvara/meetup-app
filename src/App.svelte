@@ -4,7 +4,6 @@
   import EditMeetup from './Meetups/EditMeetup.svelte';
   import MeetupDetail from './Meetups/MeetupDetail.svelte';
 
-  // Import store
   import meetups from './Meetups/meetups-store';
 
   let editMode;
