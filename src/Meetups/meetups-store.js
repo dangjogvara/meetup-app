@@ -1,6 +1,5 @@
 import { writable } from 'svelte/store';
 
-// Generate ID
 import { v4 as uuidv4 } from 'uuid';
 
 const meetups = writable([
@@ -32,8 +31,6 @@ const customMeetupsStore = {
   addMeetup: meetupData => {
     const newMeetup = {
       ...meetupData,
-      id: uuidv4(),
-      isFavorite: false,
     };
 
     meetups.update(items => {

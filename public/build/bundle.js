@@ -615,6 +615,12 @@ var app = (function () {
             }
         };
     }
+
+    const globals = (typeof window !== 'undefined'
+        ? window
+        : typeof globalThis !== 'undefined'
+            ? globalThis
+            : global);
     function outro_and_destroy_block(block, lookup) {
         transition_out(block, 1, 1, () => {
             lookup.delete(block.key);
@@ -934,7 +940,7 @@ var app = (function () {
     			h1 = element("h1");
     			h1.textContent = "MeetUs";
     			attr_dev(h1, "class", "svelte-cbgezr");
-    			add_location(h1, file$a, 1, 2, 11);
+    			add_location(h1, file$a, 1, 2, 12);
     			attr_dev(header, "class", "svelte-cbgezr");
     			add_location(header, file$a, 0, 0, 0);
     		},
@@ -1232,8 +1238,6 @@ var app = (function () {
       addMeetup: meetupData => {
         const newMeetup = {
           ...meetupData,
-          id: v4(),
-          isFavorite: false,
         };
 
         meetups.update(items => {
@@ -1287,7 +1291,7 @@ var app = (function () {
     			attr_dev(button, "class", button_class_value = "" + (/*mode*/ ctx[2] + " " + /*color*/ ctx[3] + " svelte-g32zaw"));
     			attr_dev(button, "type", /*type*/ ctx[0]);
     			button.disabled = /*disabled*/ ctx[4];
-    			add_location(button, file$9, 13, 2, 214);
+    			add_location(button, file$9, 13, 2, 227);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, button, anchor);
@@ -1372,7 +1376,7 @@ var app = (function () {
     			if (default_slot) default_slot.c();
     			attr_dev(a, "href", /*href*/ ctx[1]);
     			attr_dev(a, "class", "svelte-g32zaw");
-    			add_location(a, file$9, 9, 2, 173);
+    			add_location(a, file$9, 9, 2, 182);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, a, anchor);
@@ -1631,7 +1635,7 @@ var app = (function () {
     			span = element("span");
     			if (default_slot) default_slot.c();
     			attr_dev(span, "class", "svelte-mljoe8");
-    			add_location(span, file$8, 4, 0, 65);
+    			add_location(span, file$8, 4, 0, 69);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -1830,7 +1834,7 @@ var app = (function () {
     	return block;
     }
 
-    // (43:4) <Button mode="outline" color={isFav ? null : 'success'} type="button" on:click={togglefavorite}       >
+    // (43:4) <Button mode="outline" color={isFav ? null : 'success'} type="button" on:click={togglefavorite}        >
     function create_default_slot_1$2(ctx) {
     	let t_value = (/*isFav*/ ctx[6] ? 'Unfavorite' : 'Favorite') + "";
     	let t;
@@ -1854,7 +1858,7 @@ var app = (function () {
     		block,
     		id: create_default_slot_1$2.name,
     		type: "slot",
-    		source: "(43:4) <Button mode=\\\"outline\\\" color={isFav ? null : 'success'} type=\\\"button\\\" on:click={togglefavorite}       >",
+    		source: "(43:4) <Button mode=\\\"outline\\\" color={isFav ? null : 'success'} type=\\\"button\\\" on:click={togglefavorite}        >",
     		ctx
     	});
 
@@ -1983,27 +1987,27 @@ var app = (function () {
     			t11 = space();
     			create_component(button2.$$.fragment);
     			attr_dev(h1, "class", "svelte-lym3nh");
-    			add_location(h1, file$7, 25, 4, 507);
+    			add_location(h1, file$7, 25, 4, 532);
     			attr_dev(h2, "class", "svelte-lym3nh");
-    			add_location(h2, file$7, 31, 4, 602);
+    			add_location(h2, file$7, 31, 4, 633);
     			attr_dev(p0, "class", "svelte-lym3nh");
-    			add_location(p0, file$7, 32, 4, 626);
+    			add_location(p0, file$7, 32, 4, 658);
     			attr_dev(header, "class", "svelte-lym3nh");
-    			add_location(header, file$7, 24, 2, 494);
+    			add_location(header, file$7, 24, 2, 518);
     			if (!src_url_equal(img.src, img_src_value = /*imageUrl*/ ctx[3])) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", /*title*/ ctx[1]);
     			attr_dev(img, "class", "svelte-lym3nh");
-    			add_location(img, file$7, 35, 4, 681);
+    			add_location(img, file$7, 35, 4, 716);
     			attr_dev(div0, "class", "image svelte-lym3nh");
-    			add_location(div0, file$7, 34, 2, 657);
+    			add_location(div0, file$7, 34, 2, 691);
     			attr_dev(p1, "class", "svelte-lym3nh");
-    			add_location(p1, file$7, 38, 4, 753);
+    			add_location(p1, file$7, 38, 4, 791);
     			attr_dev(div1, "class", "content svelte-lym3nh");
-    			add_location(div1, file$7, 37, 2, 727);
+    			add_location(div1, file$7, 37, 2, 764);
     			attr_dev(footer, "class", "svelte-lym3nh");
-    			add_location(footer, file$7, 40, 2, 785);
+    			add_location(footer, file$7, 40, 2, 825);
     			attr_dev(article, "class", "svelte-lym3nh");
-    			add_location(article, file$7, 23, 0, 482);
+    			add_location(article, file$7, 23, 0, 505);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -2370,13 +2374,13 @@ var app = (function () {
     			attr_dev(button0, "type", "button");
     			attr_dev(button0, "class", "svelte-wewm0q");
     			toggle_class(button0, "active", /*selectedButton*/ ctx[0] === 0);
-    			add_location(button0, file$6, 9, 2, 150);
+    			add_location(button0, file$6, 9, 2, 159);
     			attr_dev(button1, "type", "button");
     			attr_dev(button1, "class", "svelte-wewm0q");
     			toggle_class(button1, "active", /*selectedButton*/ ctx[0] === 1);
-    			add_location(button1, file$6, 18, 2, 323);
+    			add_location(button1, file$6, 18, 2, 341);
     			attr_dev(div, "class", "svelte-wewm0q");
-    			add_location(div, file$6, 8, 0, 142);
+    			add_location(div, file$6, 8, 0, 150);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -2547,7 +2551,7 @@ var app = (function () {
     			div = element("div");
     			create_component(meetupitem.$$.fragment);
     			t = space();
-    			add_location(div, file$5, 27, 4, 766);
+    			add_location(div, file$5, 27, 4, 793);
     			this.first = div;
     		},
     		m: function mount(target, anchor) {
@@ -2664,10 +2668,10 @@ var app = (function () {
 
     			attr_dev(section0, "id", "meetup-controls");
     			attr_dev(section0, "class", "svelte-intkc5");
-    			add_location(section0, file$5, 21, 0, 545);
+    			add_location(section0, file$5, 21, 0, 566);
     			attr_dev(section1, "id", "meetups");
     			attr_dev(section1, "class", "svelte-intkc5");
-    			add_location(section1, file$5, 25, 0, 691);
+    			add_location(section1, file$5, 25, 0, 716);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -2872,7 +2876,7 @@ var app = (function () {
     			input.value = /*value*/ ctx[4];
     			attr_dev(input, "class", "svelte-1mrfx4j");
     			toggle_class(input, "invalid", !/*valid*/ ctx[6] && /*touched*/ ctx[8]);
-    			add_location(input, file$4, 25, 4, 513);
+    			add_location(input, file$4, 25, 4, 538);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, input, anchor);
@@ -2935,7 +2939,7 @@ var app = (function () {
     			textarea.value = /*value*/ ctx[4];
     			attr_dev(textarea, "class", "svelte-1mrfx4j");
     			toggle_class(textarea, "invalid", !/*valid*/ ctx[6] && /*touched*/ ctx[8]);
-    			add_location(textarea, file$4, 16, 4, 350);
+    			add_location(textarea, file$4, 16, 4, 366);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, textarea, anchor);
@@ -2994,7 +2998,7 @@ var app = (function () {
     			p = element("p");
     			t = text(/*validityMessage*/ ctx[7]);
     			attr_dev(p, "class", "error-message svelte-1mrfx4j");
-    			add_location(p, file$4, 35, 4, 716);
+    			add_location(p, file$4, 35, 4, 751);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, p, anchor);
@@ -3046,9 +3050,9 @@ var app = (function () {
     			if (if_block1) if_block1.c();
     			attr_dev(label_1, "for", /*id*/ ctx[1]);
     			attr_dev(label_1, "class", "svelte-1mrfx4j");
-    			add_location(label_1, file$4, 14, 2, 279);
+    			add_location(label_1, file$4, 14, 2, 293);
     			attr_dev(div, "class", "form-control svelte-1mrfx4j");
-    			add_location(div, file$4, 13, 0, 250);
+    			add_location(div, file$4, 13, 0, 263);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -3344,7 +3348,7 @@ var app = (function () {
     	return block;
     }
 
-    // (22:24)        
+    // (22:24)         
     function fallback_block(ctx) {
     	let button;
     	let current;
@@ -3394,7 +3398,7 @@ var app = (function () {
     		block,
     		id: fallback_block.name,
     		type: "fallback",
-    		source: "(22:24)        ",
+    		source: "(22:24)         ",
     		ctx
     	});
 
@@ -3436,15 +3440,15 @@ var app = (function () {
     			footer = element("footer");
     			if (footer_slot_or_fallback) footer_slot_or_fallback.c();
     			attr_dev(div0, "class", "modal-backdrop svelte-rj5ywu");
-    			add_location(div0, file$3, 14, 0, 280);
+    			add_location(div0, file$3, 14, 0, 294);
     			attr_dev(h1, "class", "svelte-rj5ywu");
-    			add_location(h1, file$3, 16, 2, 399);
+    			add_location(h1, file$3, 16, 2, 415);
     			attr_dev(div1, "class", "content svelte-rj5ywu");
-    			add_location(div1, file$3, 17, 2, 418);
+    			add_location(div1, file$3, 17, 2, 435);
     			attr_dev(footer, "class", "svelte-rj5ywu");
-    			add_location(footer, file$3, 20, 2, 464);
+    			add_location(footer, file$3, 20, 2, 484);
     			attr_dev(div2, "class", "modal svelte-rj5ywu");
-    			add_location(div2, file$3, 15, 0, 349);
+    			add_location(div2, file$3, 15, 0, 364);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -3644,9 +3648,11 @@ var app = (function () {
     }
 
     /* src/Meetups/EditMeetup.svelte generated by Svelte v3.46.3 */
+
+    const { Error: Error_1, console: console_1 } = globals;
     const file$2 = "src/Meetups/EditMeetup.svelte";
 
-    // (72:0) <Modal title="Edit Meetup Data" on:cancel>
+    // (91:0) <Modal title="Edit Meetup Data" on:cancel>
     function create_default_slot_3(ctx) {
     	let form;
     	let textinput0;
@@ -3759,7 +3765,7 @@ var app = (function () {
     			t4 = space();
     			create_component(textinput5.$$.fragment);
     			attr_dev(form, "class", "svelte-no1xoc");
-    			add_location(form, file$2, 72, 2, 1779);
+    			add_location(form, file$2, 91, 2, 2481);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, form, anchor);
@@ -3843,14 +3849,14 @@ var app = (function () {
     		block,
     		id: create_default_slot_3.name,
     		type: "slot",
-    		source: "(72:0) <Modal title=\\\"Edit Meetup Data\\\" on:cancel>",
+    		source: "(91:0) <Modal title=\\\"Edit Meetup Data\\\" on:cancel>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (126:4) <Button type="button" mode="outline" on:click={cancel}>
+    // (145:4) <Button type="button" mode="outline" on:click={cancel}>
     function create_default_slot_2(ctx) {
     	let t;
 
@@ -3870,14 +3876,14 @@ var app = (function () {
     		block,
     		id: create_default_slot_2.name,
     		type: "slot",
-    		source: "(126:4) <Button type=\\\"button\\\" mode=\\\"outline\\\" on:click={cancel}>",
+    		source: "(145:4) <Button type=\\\"button\\\" mode=\\\"outline\\\" on:click={cancel}>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (127:4) <Button type="button" on:click={submitForm} disabled={!formIsValid}>
+    // (146:4) <Button type="button" on:click={submitForm} disabled={!formIsValid}>
     function create_default_slot_1$1(ctx) {
     	let t;
 
@@ -3897,14 +3903,14 @@ var app = (function () {
     		block,
     		id: create_default_slot_1$1.name,
     		type: "slot",
-    		source: "(127:4) <Button type=\\\"button\\\" on:click={submitForm} disabled={!formIsValid}>",
+    		source: "(146:4) <Button type=\\\"button\\\" on:click={submitForm} disabled={!formIsValid}>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (128:4) {#if id}
+    // (147:4) {#if id}
     function create_if_block$1(ctx) {
     	let button;
     	let current;
@@ -3955,14 +3961,14 @@ var app = (function () {
     		block,
     		id: create_if_block$1.name,
     		type: "if",
-    		source: "(128:4) {#if id}",
+    		source: "(147:4) {#if id}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (129:6) <Button type="button" on:click={removeMeetup}>
+    // (148:6) <Button type="button" on:click={removeMeetup}>
     function create_default_slot$1(ctx) {
     	let t;
 
@@ -3982,14 +3988,14 @@ var app = (function () {
     		block,
     		id: create_default_slot$1.name,
     		type: "slot",
-    		source: "(129:6) <Button type=\\\"button\\\" on:click={removeMeetup}>",
+    		source: "(148:6) <Button type=\\\"button\\\" on:click={removeMeetup}>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (125:2) 
+    // (144:2) 
     function create_footer_slot(ctx) {
     	let div;
     	let button0;
@@ -4032,7 +4038,7 @@ var app = (function () {
     			t1 = space();
     			if (if_block) if_block.c();
     			attr_dev(div, "slot", "footer");
-    			add_location(div, file$2, 124, 2, 3230);
+    			add_location(div, file$2, 143, 2, 3984);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -4108,7 +4114,7 @@ var app = (function () {
     		block,
     		id: create_footer_slot.name,
     		type: "slot",
-    		source: "(125:2) ",
+    		source: "(144:2) ",
     		ctx
     	});
 
@@ -4138,7 +4144,7 @@ var app = (function () {
     			create_component(modal.$$.fragment);
     		},
     		l: function claim(nodes) {
-    			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
+    			throw new Error_1("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
     			mount_component(modal, target, anchor);
@@ -4225,7 +4231,25 @@ var app = (function () {
     		if (id) {
     			customMeetupsStore.updateMeetup(id, meetupData);
     		} else {
-    			customMeetupsStore.addMeetup(meetupData);
+    			fetch('https://svelte-meetup-app-213b5-default-rtdb.europe-west1.firebasedatabase.app/meetups.json', {
+    				method: 'POST',
+    				body: JSON.stringify({ ...meetupData, isFavorite: false }),
+    				headers: { 'content-type': 'application/json' }
+    			}).then(res => {
+    				if (!res.ok) {
+    					throw new Error('An error occured, please try again.');
+    				}
+
+    				return res.json();
+    			}).then(data => {
+    				customMeetupsStore.addMeetup({
+    					...meetupData,
+    					isFavorite: false,
+    					id: data.name
+    				});
+    			}).catch(err => {
+    				console.log(err);
+    			});
     		}
 
     		dispatch('save');
@@ -4243,7 +4267,7 @@ var app = (function () {
     	const writable_props = ['id'];
 
     	Object.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console.warn(`<EditMeetup> was created with unknown prop '${key}'`);
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot') console_1.warn(`<EditMeetup> was created with unknown prop '${key}'`);
     	});
 
     	const input_handler = event => $$invalidate(1, title = event.target.value);
@@ -4382,11 +4406,11 @@ var app = (function () {
     	}
 
     	get id() {
-    		throw new Error("<EditMeetup>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    		throw new Error_1("<EditMeetup>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
 
     	set id(value) {
-    		throw new Error("<EditMeetup>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
+    		throw new Error_1("<EditMeetup>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'");
     	}
     }
 
@@ -4520,19 +4544,19 @@ var app = (function () {
     			if (!src_url_equal(img.src, img_src_value = /*selectedMeetup*/ ctx[0].imageUrl)) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", img_alt_value = /*selectedMeetup*/ ctx[0].title);
     			attr_dev(img, "class", "svelte-8ez2ph");
-    			add_location(img, file$1, 22, 4, 443);
+    			add_location(img, file$1, 22, 4, 465);
     			attr_dev(div0, "class", "image svelte-8ez2ph");
-    			add_location(div0, file$1, 21, 2, 419);
+    			add_location(div0, file$1, 21, 2, 440);
     			attr_dev(h1, "class", "svelte-8ez2ph");
-    			add_location(h1, file$1, 25, 4, 545);
+    			add_location(h1, file$1, 25, 4, 570);
     			attr_dev(h2, "class", "svelte-8ez2ph");
-    			add_location(h2, file$1, 26, 4, 581);
+    			add_location(h2, file$1, 26, 4, 607);
     			attr_dev(p, "class", "svelte-8ez2ph");
-    			add_location(p, file$1, 27, 4, 647);
+    			add_location(p, file$1, 27, 4, 674);
     			attr_dev(div1, "class", "content svelte-8ez2ph");
-    			add_location(div1, file$1, 24, 2, 519);
+    			add_location(div1, file$1, 24, 2, 543);
     			attr_dev(section, "class", "svelte-8ez2ph");
-    			add_location(section, file$1, 20, 0, 407);
+    			add_location(section, file$1, 20, 0, 427);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -4911,7 +4935,7 @@ var app = (function () {
     			main = element("main");
     			if_block.c();
     			attr_dev(main, "class", "svelte-1r5xu04");
-    			add_location(main, file, 42, 0, 797);
+    			add_location(main, file, 42, 0, 839);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
