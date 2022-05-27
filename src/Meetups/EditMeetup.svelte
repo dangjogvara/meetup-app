@@ -38,8 +38,7 @@
   $: imageUrlValid = !isEmpty(imageUrl);
   $: emailValid = isValidEmail(email);
   $: descriptionValid = !isEmpty(description);
-  $: formIsValid =
-    titleValid && subtitleValid && addressValid && imageUrlValid && emailValid && descriptionValid;
+  $: formIsValid = titleValid && subtitleValid && addressValid && imageUrlValid && emailValid && descriptionValid;
 
   function submitForm() {
     const meetupData = {
@@ -52,14 +51,11 @@
     };
 
     if (id) {
-      fetch(
-        `https://svelte-meetup-app-213b5-default-rtdb.europe-west1.firebasedatabase.app/meetups/${id}.json`,
-        {
-          method: 'PATCH',
-          body: JSON.stringify(meetupData),
-          headers: { 'content-type': 'application/json' },
-        }
-      )
+      fetch(`https://svelte-meetup-app-213b5-default-rtdb.europe-west1.firebasedatabase.app/meetups/${id}.json`, {
+        method: 'PATCH',
+        body: JSON.stringify(meetupData),
+        headers: { 'content-type': 'application/json' },
+      })
         .then(res => {
           if (!res.ok) {
             throw new Error('An error occured, please try again.');
@@ -70,14 +66,11 @@
           console.log(err);
         });
     } else {
-      fetch(
-        'https://svelte-meetup-app-213b5-default-rtdb.europe-west1.firebasedatabase.app/meetups.json',
-        {
-          method: 'POST',
-          body: JSON.stringify({ ...meetupData, isFavorite: false }),
-          headers: { 'content-type': 'application/json' },
-        }
-      )
+      fetch('https://svelte-meetup-app-213b5-default-rtdb.europe-west1.firebasedatabase.app/meetups.json', {
+        method: 'POST',
+        body: JSON.stringify({ ...meetupData, isFavorite: false }),
+        headers: { 'content-type': 'application/json' },
+      })
         .then(res => {
           if (!res.ok) {
             throw new Error('An error occured, please try again.');
@@ -95,7 +88,18 @@
   }
 
   const removeMeetup = () => {
-    meetups.removeMeetup(id);
+    fetch(`https://svelte-meetup-app-213b5-default-rtdb.europe-west1.firebasedatabase.app/meetups/${id}.json`, {
+      method: 'DELETE',
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('An error occured, please try again.');
+        }
+        meetups.removeMeetup(id);
+      })
+      .catch(err => {
+        console.log(err);
+      });
     dispatch('save');
   };
 
