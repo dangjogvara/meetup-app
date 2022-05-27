@@ -37,6 +37,7 @@
         imageUrl={meetup.imageUrl}
         address={meetup.address}
         isFav={meetup.isFavorite}
+        email={meetup.email}
         on:showdetails
         on:edit
       />

@@ -10,6 +10,7 @@
   export let subtitle;
   export let imageUrl;
   export let description;
+  export let email;
   export let address;
   export let isFav;
 

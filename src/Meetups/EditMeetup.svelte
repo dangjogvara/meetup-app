@@ -23,7 +23,7 @@
       subtitle = selectedMeetup.subtitle;
       address = selectedMeetup.address;
       imageUrl = selectedMeetup.imageUrl;
-      email = selectedMeetup.contactEmail;
+      email = selectedMeetup.email;
       description = selectedMeetup.description;
     });
 
@@ -52,7 +52,23 @@
     };
 
     if (id) {
-      meetups.updateMeetup(id, meetupData);
+      fetch(
+        `https://svelte-meetup-app-213b5-default-rtdb.europe-west1.firebasedatabase.app/meetups/${id}.json`,
+        {
+          method: 'PATCH',
+          body: JSON.stringify(meetupData),
+          headers: { 'content-type': 'application/json' },
+        }
+      )
+        .then(res => {
+          if (!res.ok) {
+            throw new Error('An error occured, please try again.');
+          }
+          meetups.updateMeetup(id, meetupData);
+        })
+        .catch(err => {
+          console.log(err);
+        });
     } else {
       fetch(
         'https://svelte-meetup-app-213b5-default-rtdb.europe-west1.firebasedatabase.app/meetups.json',
