@@ -13,9 +13,7 @@
   let pageData = {};
   let isLoading = true;
 
-  fetch(
-    'https://svelte-meetup-app-213b5-default-rtdb.europe-west1.firebasedatabase.app/meetups.json'
-  )
+  fetch('https://svelte-meetup-app-213b5-default-rtdb.europe-west1.firebasedatabase.app/meetups.json')
     .then(res => {
       if (!res.ok) {
         throw new Error('Fetching meetups failed, please try again.');
@@ -31,7 +29,7 @@
         });
       }
       isLoading = false;
-      meetups.setMeetups(loadedMeetups);
+      meetups.setMeetups(loadedMeetups.reverse());
     })
     .catch(err => {
       isLoading = false;

@@ -4814,7 +4814,7 @@ var app = (function () {
     const { Error: Error_1, console: console_1 } = globals;
     const file = "src/App.svelte";
 
-    // (86:2) {:else}
+    // (84:2) {:else}
     function create_else_block_1(ctx) {
     	let meetupdetail;
     	let current;
@@ -4857,14 +4857,14 @@ var app = (function () {
     		block,
     		id: create_else_block_1.name,
     		type: "else",
-    		source: "(86:2) {:else}",
+    		source: "(84:2) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (70:2) {#if page === 'overview'}
+    // (68:2) {#if page === 'overview'}
     function create_if_block(ctx) {
     	let t;
     	let current_block_type_index;
@@ -4970,14 +4970,14 @@ var app = (function () {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(70:2) {#if page === 'overview'}",
+    		source: "(68:2) {#if page === 'overview'}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (71:4) {#if editMode === 'edit'}
+    // (69:4) {#if editMode === 'edit'}
     function create_if_block_2(ctx) {
     	let editmeetup;
     	let current;
@@ -5021,14 +5021,14 @@ var app = (function () {
     		block,
     		id: create_if_block_2.name,
     		type: "if",
-    		source: "(71:4) {#if editMode === 'edit'}",
+    		source: "(69:4) {#if editMode === 'edit'}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (76:4) {:else}
+    // (74:4) {:else}
     function create_else_block(ctx) {
     	let meetupgrid;
     	let current;
@@ -5073,14 +5073,14 @@ var app = (function () {
     		block,
     		id: create_else_block.name,
     		type: "else",
-    		source: "(76:4) {:else}",
+    		source: "(74:4) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (74:4) {#if isLoading}
+    // (72:4) {#if isLoading}
     function create_if_block_1(ctx) {
     	let loadingspinner;
     	let current;
@@ -5113,7 +5113,7 @@ var app = (function () {
     		block,
     		id: create_if_block_1.name,
     		type: "if",
-    		source: "(74:4) {#if isLoading}",
+    		source: "(72:4) {#if isLoading}",
     		ctx
     	});
 
@@ -5146,7 +5146,7 @@ var app = (function () {
     			main = element("main");
     			if_block.c();
     			attr_dev(main, "class", "svelte-1r5xu04");
-    			add_location(main, file, 68, 0, 1521);
+    			add_location(main, file, 66, 0, 1521);
     		},
     		l: function claim(nodes) {
     			throw new Error_1("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -5241,7 +5241,7 @@ var app = (function () {
     		}
 
     		$$invalidate(4, isLoading = false);
-    		customMeetupsStore.setMeetups(loadedMeetups);
+    		customMeetupsStore.setMeetups(loadedMeetups.reverse());
     	}).catch(err => {
     		$$invalidate(4, isLoading = false);
     		console.log(err);
