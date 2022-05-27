@@ -36,7 +36,6 @@
         description={meetup.description}
         imageUrl={meetup.imageUrl}
         address={meetup.address}
-        email={meetup.contactEmail}
         isFav={meetup.isFavorite}
         on:showdetails
         on:edit
